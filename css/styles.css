@@ -1,0 +1,55 @@
+:root {
+  --primary: #ed3131;
+  --secondary: #d4a248;
+  --success: #3fa54a;
+  --warning: #f5b334;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.navbar-brand img {
+  height: 50px;
+}
+
+.hero {
+  height: 80vh;
+  background: url('../images/hero.jpg') center/cover no-repeat;
+  position: relative;
+}
+.hero::after {
+  content: "";
+  position: absolute; top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.4);
+}
+.hero .container { position: relative; z-index:2; }
+
+.btn-primary {
+  background-color: var(--primary) !important;
+  border-color: var(--primary) !important;
+}
+.btn-primary:hover {
+  background-color: #c62828 !important;
+  border-color: #c62828 !important;
+}
+.btn-warning {
+  background-color: var(--warning) !important;
+  border-color: var(--warning) !important;
+}
+.btn-warning:hover {
+  background-color: #d4a248 !important;
+  border-color: #d4a248 !important;
+}
+
+footer {
+  background: #222;
+  color: #aaa;
+}
+footer a {
+  color: #fff;
+  text-decoration: none;
+}
+footer a:hover {
+  text-decoration: underline;
+}

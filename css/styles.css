@@ -58,3 +58,10 @@ footer a:hover {
   height: auto;
   display: inline-block;
 }
+.70%-width {
+  max-width: 70%;
+  height: auto;
+  display: inline-block;
+}
+
+

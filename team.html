@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Our Team – Ghanish</title>
   <link rel="icon" href="images/ghanish-logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,30 +12,52 @@
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
-      <a class="navbar-brand" href="index.html"><img src="images/ghanish-logo.png"></a>
-      <!-- toggler & links -->
+      <a class="navbar-brand" href="index.html">
+        <img src="images/ghanish-logo.png" alt="Ghanish Logo" height="50">
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="about.html">About Us</a></li>
+          <li class="nav-item"><a class="nav-link" href="products.html">Products</a></li>
+          <li class="nav-item"><a class="nav-link" href="gallery.html">Gallery</a></li>
+          <li class="nav-item"><a class="nav-link active" href="team.html">Team</a></li>
+          <li class="nav-item"><a class="nav-link" href="faq.html">FAQ</a></li>
+          <li class="nav-item"><a class="nav-link" href="blog.html">Blog</a></li>
+          <li class="nav-item"><a class="nav-link" href="testimonials.html">Testimonials</a></li>
+          <li class="nav-item"><a class="nav-link" href="contact.html">Contact</a></li>
+        </ul>
+      </div>
     </div>
   </nav>
 
-  <!-- Team -->
+  <!-- Team Section -->
   <section class="py-5">
     <div class="container">
       <h2 class="mb-4 text-center">Meet the Team</h2>
-      <div class="row g-4">
-        <div class="col-md-4 text-center">
-          <img src="images/team1.jpg" class="rounded-circle mb-3" width="150" alt="">
-          <h5>Kwame Asante</h5>
-          <p>Founder & CEO</p>
+      <div class="row row-cols-1 row-cols-md-4 g-4">
+        <div class="col text-center">
+          <img src="images/team1.jpg" class="rounded-circle mb-3" width="150" alt="Linda Bartels-Poku">
+          <h5>Linda Bartels-Poku</h5>
+          <p>Founder &amp; CEO</p>
         </div>
-        <div class="col-md-4 text-center">
-          <img src="images/team2.jpg" class="rounded-circle mb-3" width="150" alt="">
-          <h5>Amina Suleiman</h5>
-          <p>Operations Manager</p>
+        <div class="col text-center">
+          <img src="images/team2.jpg" class="rounded-circle mb-3" width="150" alt="Harold Poku">
+          <h5>Harold Poku</h5>
+          <p>Co-Founder &amp; COO</p>
         </div>
-        <div class="col-md-4 text-center">
-          <img src="images/team3.jpg" class="rounded-circle mb-3" width="150" alt="">
-          <h5>Joseph Mensah</h5>
-          <p>Quality Assurance</p>
+        <div class="col text-center">
+          <img src="images/team3.jpg" class="rounded-circle mb-3" width="150" alt="Angel Poku">
+          <h5>Angel Poku</h5>
+          <p>Head of Digital Marketing</p>
+        </div>
+        <div class="col text-center">
+          <img src="images/team4.jpg" class="rounded-circle mb-3" width="150" alt="Apryl Poku">
+          <h5>Apryl Poku</h5>
+          <p>Head of Sales</p>
         </div>
       </div>
     </div>
@@ -42,8 +65,35 @@
 
   <!-- Footer -->
   <footer class="pt-5 bg-dark text-white">
-    <!-- ... -->
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <h5>Quick Links</h5>
+          <ul class="list-unstyled">
+            <li><a href="index.html" class="text-white">Home</a></li>
+            <li><a href="products.html" class="text-white">Products</a></li>
+            <li><a href="gallery.html" class="text-white">Gallery</a></li>
+            <li><a href="faq.html" class="text-white">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h5>Contact Us</h5>
+          <p><i class="fas fa-phone me-2"></i>+233 1234 56789<br>
+             <i class="fas fa-envelope me-2"></i>info@ghanish.com</p>
+          <p>
+            <a href="#" class="text-white me-2"><i class="fab fa-facebook fa-lg"></i></a>
+            <a href="#" class="text-white"><i class="fab fa-instagram fa-lg"></i></a>
+          </p>
+        </div>
+        <div class="col-md-4 mb-3">
+          <h5>Location</h5>
+          <p>Accra, Ghana</p>
+        </div>
+      </div>
+      <div class="text-center py-3">© 2025 Ghanish. All rights reserved.</div>
+    </div>
   </footer>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/scripts.js"></script>
 </body>

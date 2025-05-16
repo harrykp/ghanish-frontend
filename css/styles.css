@@ -53,3 +53,8 @@ footer a {
 footer a:hover {
   text-decoration: underline;
 }
+.half-width {
+  max-width: 50%;
+  height: auto;
+  display: inline-block;
+}

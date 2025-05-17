@@ -1,20 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sign Up – Ghanish</title>
   <link rel="icon" href="images/ghanish-logo.png">
 
   <!-- Bootstrap & FontAwesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  
-  <!-- Your custom CSS (includes .loading-overlay & .fade-in) -->
   <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
-  <!-- Navbar -->
+<!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
       <a class="navbar-brand" href="index.html">
@@ -76,7 +73,7 @@
     </div>
   </section>
 
-  <!-- Footer -->
+<!-- Footer (same as index.html) -->
   <footer class="pt-5 bg-dark text-white">
     <div class="container">
       <div class="row">
@@ -107,14 +104,14 @@
     </div>
   </footer>
 
-  <!-- Bootstrap JS -->
+  <!-- Scripts -->
+  <!-- 1) Bootstrap bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <!-- Global site script (nav toggling, fade-in, contact form, toasts, etc.) -->
+  <!-- 2) Global site script (defines API_URL, showToast, nav toggle, fade-in, contact form, etc.) -->
   <script src="js/scripts.js"></script>
-  <!-- Inline JS for Signup -->
+  <!-- 3) Inline Signup logic (NO more const API_URL here) -->
   <script>
-    const API_URL = 'https://ghanish-backend.onrender.com';
-    
+    // We now rely on API_URL from js/scripts.js
     function showToast(message, type='info') {
       const toastEl = document.createElement('div');
       toastEl.className = `toast align-items-center text-bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
@@ -135,7 +132,7 @@
       const form = document.getElementById('signupForm');
       if (!form) return;
 
-      // Create loader overlay
+      // Loader overlay
       const loader = document.createElement('div');
       loader.className = 'loading-overlay';
       loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
@@ -147,9 +144,8 @@
         loader.classList.add('show');
         submitBtn.disabled = true;
 
-        // Confirm-password check
-        const pwd = form.password.value;
-        if (pwd !== form.confirmPassword.value) {
+        // Confirm password
+        if (form.password.value !== form.confirmPassword.value) {
           loader.classList.remove('show');
           submitBtn.disabled = false;
           return showToast('Passwords do not match', 'warning');
@@ -158,7 +154,7 @@
         const data = {
           email: form.email.value.trim(),
           phone: form.phone.value.trim(),
-          password: pwd
+          password: form.password.value
         };
 
         try {

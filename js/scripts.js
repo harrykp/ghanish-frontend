@@ -2,13 +2,38 @@
 const API_URL = 'https://ghanish-backend.onrender.com';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Smooth scroll active-link highlighting
-  const navLinks = document.querySelectorAll('.nav-link');
+  // === AUTH NAV TOGGLING & LOGOUT ===
+  const token = localStorage.getItem('token');
+  const loginLink = document.getElementById('loginLink');
+  const signupLink = document.getElementById('signupLink');
+  const logoutLink = document.getElementById('logoutLink');
+  const doLogout = document.getElementById('doLogout');
+
+  if (token) {
+    loginLink.classList.add('d-none');
+    signupLink.classList.add('d-none');
+    logoutLink.classList.remove('d-none');
+  } else {
+    logoutLink.classList.add('d-none');
+    loginLink.classList.remove('d-none');
+    signupLink.classList.remove('d-none');
+  }
+
+  doLogout?.addEventListener('click', e => {
+    e.preventDefault();
+    localStorage.removeItem('token');
+    // Redirect to home
+    window.location.href = 'index.html';
+  });
+
+  // === SMOOTH SCROLL + ACTIVE LINK ===
+  const navLinks = document.querySelectorAll('.nav-link[href^="#"], .nav-link[href*=".html"]');
   document.addEventListener('scroll', () => {
     const fromTop = window.scrollY + 80;
     navLinks.forEach(link => {
-      if (!link.hash) return;
-      const section = document.querySelector(link.hash);
+      const hash = link.hash;
+      if (!hash) return;
+      const section = document.querySelector(hash);
       if (!section) return;
       if (
         section.offsetTop <= fromTop &&
@@ -21,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Fade-in on scroll
+  // === FADE-IN ON SCROLL ===
   const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
@@ -33,45 +58,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-  // Contact Form: loading overlay & toasts
+  // === CONTACT FORM WITH LOADER & TOASTS ===
   const form = document.getElementById('contactForm');
-  if (!form) return;
+  if (form) {
+    // Loader
+    const loader = document.createElement('div');
+    loader.className = 'loading-overlay';
+    loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
+    document.body.appendChild(loader);
 
-  // Create loader overlay
-  const loader = document.createElement('div');
-  loader.className = 'loading-overlay';
-  loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-  document.body.appendChild(loader);
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      loader.classList.add('show');
+      const submitBtn = form.querySelector('[type="submit"]');
+      submitBtn.disabled = true;
 
-  form.addEventListener('submit', async e => {
-    e.preventDefault();
-    loader.classList.add('show');
-    const submitBtn = form.querySelector('[type="submit"]');
-    submitBtn.disabled = true;
+      try {
+        const data = Object.fromEntries(new FormData(form));
+        const res = await fetch(`${API_URL}/api/contact`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        loader.classList.remove('show');
+        submitBtn.disabled = false;
 
-    try {
-      const data = Object.fromEntries(new FormData(form));
-      const res = await fetch(`${API_URL}/api/contact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const json = await res.json();
-      loader.classList.remove('show');
-      submitBtn.disabled = false;
-
-      if (res.ok) {
-        form.reset();
-        showToast('Thank you! We’ll be in touch soon.', 'success');
-      } else {
-        showToast(json.error || 'Something went wrong.', 'danger');
+        if (res.ok) {
+          form.reset();
+          showToast('Thank you! We’ll be in touch soon.', 'success');
+        } else {
+          showToast(json.error || 'Something went wrong.', 'danger');
+        }
+      } catch (err) {
+        loader.classList.remove('show');
+        submitBtn.disabled = false;
+        showToast('Network error. Please try again.', 'warning');
       }
-    } catch (err) {
-      loader.classList.remove('show');
-      submitBtn.disabled = false;
-      showToast('Network error. Please try again.', 'warning');
-    }
-  });
+    });
+  }
 
   // Toast helper
   function showToast(message, type='info') {

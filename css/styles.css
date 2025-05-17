@@ -24,7 +24,7 @@ body {
 
 .hero {
   height: 80vh;
-  background: url('../images/hero.jpg') center/cover no-repeat;
+  background: url('../images/hero3.png') center/cover no-repeat;
   position: relative;
 }
 .hero::after {

@@ -23,6 +23,6 @@ async function loadInclude(id, url) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadInclude('nav-placeholder', '/nav.html');
-  loadInclude('footer-placeholder', '/footer.html');
+  loadInclude('nav-placeholder', 'nav.html');
+  loadInclude('footer-placeholder', 'footer.html');
 });

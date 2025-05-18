@@ -1,4 +1,5 @@
 // js/includes.js
+
 async function loadInclude(id, url) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -6,13 +7,8 @@ async function loadInclude(id, url) {
     const res = await fetch(url);
     if (res.ok) {
       el.innerHTML = await res.text();
-      // After nav is in place, re-run scripts that depend on it:
-      if (id === 'nav-placeholder' && window.updateCartCount) {
-        updateCartCount();
-        // Also toggle profileLink visibility:
-        const token = localStorage.getItem('token');
-        document.getElementById('profileLink')
-          .classList.toggle('d-none', !token);
+      if (id === 'nav-placeholder' && typeof window.initGhanishUI === 'function') {
+        window.initGhanishUI(); // initialize nav-based logic after nav is injected
       }
     } else {
       console.error(`Failed to load ${url}: ${res.status}`);

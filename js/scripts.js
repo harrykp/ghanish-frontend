@@ -58,7 +58,7 @@ window.initGhanishUI = function() {
   updateCartCount();
 
   // === SMOOTH SCROLL + ACTIVE LINK ===
-  const navLinks = document.querySelectorAll('.nav-link[href^="#"], .nav-link[href*=".html"]');
+  const navLinks = document.querySelectorAll('.nav-link[href^=\"#\"], .nav-link[href*=\".html\"]');
   document.addEventListener('scroll', () => {
     const fromTop = window.scrollY + 80;
     navLinks.forEach(link => {
@@ -121,9 +121,40 @@ window.initGhanishUI = function() {
     });
   }
 
-  // === ADD TO CART HANDLER ===
+  // === LOAD PRODUCTS on STORE PAGE ===
   const productGrid = document.getElementById('productGrid');
   if (productGrid) {
+    fetch(`${API_URL}/api/products`)
+      .then(res => res.ok ? res.json() : Promise.reject('Failed to load'))
+      .then(products => {
+        products.forEach(product => {
+          const col = document.createElement('div');
+          col.className = 'col-12 col-md-6 col-lg-4 fade-in';
+          col.innerHTML = `
+            <div class="card h-100">
+              ${product.image_url ? `<img src="${product.image_url}" class="card-img-top" alt="${product.name}">` : ''}
+              <div class="card-body d-flex flex-column">
+                <h5 class="card-title">${product.name}</h5>
+                <p class="card-text">${product.description}</p>
+                <p class="mt-auto fw-bold">$${parseFloat(product.price).toFixed(2)}</p>
+                <button class="btn btn-success mt-2 add-to-cart"
+                        data-id="${product.id}"
+                        data-name="${product.name}"
+                        data-price="${product.price}">Add to Cart</button>
+              </div>
+            </div>`;
+          productGrid.appendChild(col);
+          setTimeout(() => col.classList.add('visible'), 50);
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'alert alert-danger';
+        errorDiv.textContent = 'Unable to load products at this time.';
+        productGrid.parentElement.insertBefore(errorDiv, productGrid);
+      });
+
     productGrid.addEventListener('click', e => {
       const btn = e.target.closest('.add-to-cart');
       if (!btn) return;

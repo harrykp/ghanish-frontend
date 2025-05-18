@@ -22,7 +22,6 @@ document.addEventListener('DOMContentLoaded', () => {
   doLogout?.addEventListener('click', e => {
     e.preventDefault();
     localStorage.removeItem('token');
-    // Redirect to home
     window.location.href = 'index.html';
   });
 
@@ -35,10 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!hash) return;
       const section = document.querySelector(hash);
       if (!section) return;
-      if (
-        section.offsetTop <= fromTop &&
-        (section.offsetTop + section.offsetHeight) > fromTop
-      ) {
+      if (section.offsetTop <= fromTop && (section.offsetTop + section.offsetHeight) > fromTop) {
         link.classList.add('active');
       } else {
         link.classList.remove('active');
@@ -61,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // === CONTACT FORM WITH LOADER & TOASTS ===
   const form = document.getElementById('contactForm');
   if (form) {
-    // Loader
     const loader = document.createElement('div');
     loader.className = 'loading-overlay';
     loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
@@ -94,6 +89,27 @@ document.addEventListener('DOMContentLoaded', () => {
         loader.classList.remove('show');
         submitBtn.disabled = false;
         showToast('Network error. Please try again.', 'warning');
+      }
+    });
+  }
+
+  // === ADD TO CART HANDLER ===
+  const grid = document.getElementById('productGrid');
+  if (grid) {
+    grid.addEventListener('click', e => {
+      if (e.target.classList.contains('add-to-cart')) {
+        const id = +e.target.dataset.id;
+        const name = e.target.dataset.name;
+        const price = +e.target.dataset.price;
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const existing = cart.find(item => item.id === id);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          cart.push({ id, name, price, quantity: 1 });
+        }
+        localStorage.setItem('cart', JSON.stringify(cart));
+        showToast('Added to cart', 'success');
       }
     });
   }

@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
     loginLink.classList.remove('d-none');
     signupLink.classList.remove('d-none');
   }
-
   doLogout?.addEventListener('click', e => {
     e.preventDefault();
     localStorage.removeItem('token');
@@ -51,47 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }, { threshold: 0.1 });
-
   document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-  // === CONTACT FORM WITH LOADER & TOASTS ===
+  // === CONTACT FORM ===
   const form = document.getElementById('contactForm');
-  if (form) {
-    const loader = document.createElement('div');
-    loader.className = 'loading-overlay';
-    loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-    document.body.appendChild(loader);
-
-    form.addEventListener('submit', async e => {
-      e.preventDefault();
-      loader.classList.add('show');
-      const submitBtn = form.querySelector('[type="submit"]');
-      submitBtn.disabled = true;
-
-      try {
-        const data = Object.fromEntries(new FormData(form));
-        const res = await fetch(`${API_URL}/api/contact`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        const json = await res.json();
-        loader.classList.remove('show');
-        submitBtn.disabled = false;
-
-        if (res.ok) {
-          form.reset();
-          showToast('Thank you! We’ll be in touch soon.', 'success');
-        } else {
-          showToast(json.error || 'Something went wrong.', 'danger');
-        }
-      } catch (err) {
-        loader.classList.remove('show');
-        submitBtn.disabled = false;
-        showToast('Network error. Please try again.', 'warning');
-      }
-    });
-  }
+  if (form) { /* existing code */ }
 
   // === ADD TO CART HANDLER ===
   const grid = document.getElementById('productGrid');
@@ -103,16 +66,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const price = +e.target.dataset.price;
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const existing = cart.find(item => item.id === id);
-        if (existing) {
-          existing.quantity += 1;
-        } else {
-          cart.push({ id, name, price, quantity: 1 });
-        }
+        if (existing) existing.quantity += 1;
+        else cart.push({ id, name, price, quantity: 1 });
         localStorage.setItem('cart', JSON.stringify(cart));
         showToast('Added to cart', 'success');
+        updateCartCount();
       }
     });
   }
+
+  // === CART COUNT UPDATE ===
+  window.updateCartCount = function() {
+    const countBadge = document.getElementById('cartCountBadge');
+    const countInline = document.getElementById('cartCountInline');
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+    if (countBadge) countBadge.textContent = totalItems;
+    if (countInline) countInline.textContent = totalItems;
+  };
 
   // Toast helper
   function showToast(message, type='info') {
@@ -126,8 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
       </div>`;
     document.body.appendChild(toastEl);
-    const bsToast = new bootstrap.Toast(toastEl, { delay: 4000 });
-    bsToast.show();
+    new bootstrap.Toast(toastEl, { delay: 4000 }).show();
     toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
   }
 });

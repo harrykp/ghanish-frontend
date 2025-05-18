@@ -12,7 +12,7 @@
   <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
-  <!-- Navbar -->
+   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
     <div class="container">
       <a class="navbar-brand" href="index.html">
@@ -108,7 +108,7 @@
           <p><strong>Order #${order.id}</strong><br>
           Date: ${date}<br>
           Status: ${order.status}</p>
-          <table class="table">
+          <table class=\"table\">
             <thead>
               <tr><th>Product</th><th>Quantity</th><th>Unit Price</th><th>Subtotal</th></tr>
             </thead>
@@ -127,7 +127,7 @@
         html += `
             </tbody>
           </table>
-          <p class="fw-bold text-end">Total: $${parseFloat(order.total).toFixed(2)}</p>
+          <p class=\"fw-bold text-end\">Total: $${parseFloat(order.total).toFixed(2)}</p>
         `;
         container.innerHTML = html;
       } catch {

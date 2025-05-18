@@ -27,27 +27,15 @@ window.updateCartCount = function() {
   if (countInline) countInline.textContent = totalItems;
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  // === AUTH NAV TOGGLING & LOGOUT ===
+// === Global App Initializer (runs after nav loaded) ===
+window.initGhanishUI = function() {
   const token = localStorage.getItem('token');
+
   const loginLink = document.getElementById('loginLink');
   const signupLink = document.getElementById('signupLink');
   const logoutLink = document.getElementById('logoutLink');
   const profileLink = document.getElementById('profileLink');
   const doLogout = document.getElementById('doLogout');
-
-  // Toggle visibility based on login state
-  if (token) {
-    loginLink.classList.add('d-none');
-    signupLink.classList.add('d-none');
-    logoutLink.classList.remove('d-none');
-    profileLink.classList.remove('d-none');
-  } else {
-    logoutLink.classList.add('d-none');
-    loginLink.classList.remove('d-none');
-    signupLink.classList.remove('d-none');
-    profileLink.classList.add('d-none');
-  }
 
   doLogout?.addEventListener('click', e => {
     e.preventDefault();
@@ -55,7 +43,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'index.html';
   });
 
-  // Initialize cart badges
+  if (token) {
+    loginLink?.classList.add('d-none');
+    signupLink?.classList.add('d-none');
+    logoutLink?.classList.remove('d-none');
+    profileLink?.classList.remove('d-none');
+  } else {
+    logoutLink?.classList.add('d-none');
+    loginLink?.classList.remove('d-none');
+    signupLink?.classList.remove('d-none');
+    profileLink?.classList.add('d-none');
+  }
+
   updateCartCount();
 
   // === SMOOTH SCROLL + ACTIVE LINK ===
@@ -85,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }, { threshold: 0.1 });
   document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-  // === CONTACT FORM WITH LOADER & TOASTS ===
+  // === CONTACT FORM ===
   const contactForm = document.getElementById('contactForm');
   if (contactForm) {
     const loader = document.createElement('div');
@@ -140,4 +139,4 @@ document.addEventListener('DOMContentLoaded', () => {
       updateCartCount();
     });
   }
-});
+};

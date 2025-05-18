@@ -33,20 +33,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginLink = document.getElementById('loginLink');
   const signupLink = document.getElementById('signupLink');
   const logoutLink = document.getElementById('logoutLink');
-  document.getElementById('doLogout')?.addEventListener('click', e => {
-    e.preventDefault();
-    localStorage.removeItem('token');
-    window.location.href = 'index.html';
-  });
+  const profileLink = document.getElementById('profileLink');
+  const doLogout = document.getElementById('doLogout');
+
+  // Toggle visibility based on login state
   if (token) {
     loginLink.classList.add('d-none');
     signupLink.classList.add('d-none');
     logoutLink.classList.remove('d-none');
+    profileLink.classList.remove('d-none');
   } else {
     logoutLink.classList.add('d-none');
     loginLink.classList.remove('d-none');
     signupLink.classList.remove('d-none');
+    profileLink.classList.add('d-none');
   }
+
+  doLogout?.addEventListener('click', e => {
+    e.preventDefault();
+    localStorage.removeItem('token');
+    window.location.href = 'index.html';
+  });
 
   // Initialize cart badges
   updateCartCount();

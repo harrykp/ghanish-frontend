@@ -21,6 +21,10 @@
         <div class="col-lg-6">
           <form id="signupForm">
             <div class="mb-3">
+              <label for="fullName" class="form-label">Full Name *</label>
+              <input type="text" id="fullName" name="fullName" class="form-control" required>
+            </div>
+            <div class="mb-3">
               <label for="email" class="form-label">Email *</label>
               <input type="email" id="email" name="email" class="form-control" required>
             </div>
@@ -96,6 +100,7 @@
         }
 
         const data = {
+          full_name: form.fullName.value.trim(),
           email: form.email.value.trim(),
           phone: form.phone.value.trim(),
           password: form.password.value

@@ -1,28 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>My Account – Ghanish</title>
   <link rel="icon" href="images/ghanish-logo.png">
-
-  <!-- Bootstrap & FontAwesome -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="css/styles.css" rel="stylesheet">
 </head>
 <body>
-  <!-- Navbar -->
-<div id="nav-placeholder"></div>
+  <div id="nav-placeholder"></div>
 
-  <!-- Profile & Password Forms -->
   <section class="py-5 fade-in">
     <div class="container">
       <h2 class="text-center mb-4">Account Settings</h2>
       <div class="row">
         <div class="col-md-6 mb-4">
-          <h4>Update Phone</h4>
+          <h4>Profile Info</h4>
           <form id="profileForm">
+            <div class="mb-3">
+              <label for="fullName" class="form-label">Full Name</label>
+              <input type="text" id="fullName" name="fullName" class="form-control" required>
+            </div>
             <div class="mb-3">
               <label for="phone" class="form-label">Phone</label>
               <input type="tel" id="phone" name="phone" class="form-control" required>
@@ -48,61 +46,61 @@
     </div>
   </section>
 
-  <!-- Footer -->
-<div id="footer-placeholder"></div>
-
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <div id="footer-placeholder"></div>
   <script src="js/includes.js"></script>
   <script src="js/scripts.js"></script>
   <script>
-    // Redirect to login if not authenticated
     const token = localStorage.getItem('token');
     if (!token) {
       showToast('Please log in first', 'warning');
-      return setTimeout(() => window.location.href='login.html', 1000);
+      setTimeout(() => window.location.href = 'login.html', 1000);
     }
 
-    // Load current profile data
+    // Load profile
     (async () => {
       const res = await fetch(`${API_URL}/api/auth/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
         const user = await res.json();
-        document.getElementById('phone').value = user.phone;
+        document.getElementById('fullName').value = user.full_name || '';
+        document.getElementById('phone').value = user.phone || '';
       }
     })();
 
-    // Update phone
+    // Update profile
     document.getElementById('profileForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const phone = e.target.phone.value.trim();
+      const body = {
+        full_name: e.target.fullName.value.trim(),
+        phone: e.target.phone.value.trim()
+      };
       const res = await fetch(`${API_URL}/api/auth/profile`, {
         method: 'PUT',
         headers: {
-          'Content-Type':'application/json',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ phone })
+        body: JSON.stringify(body)
       });
       const json = await res.json();
-      showToast(json.message || 'Profile updated', res.ok ? 'success' : 'danger');
+      showToast(json.message || 'Update failed', res.ok ? 'success' : 'danger');
     });
 
     // Change password
     document.getElementById('passwordForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const currentPassword = e.target.currentPassword.value;
-      const newPassword = e.target.newPassword.value;
+      const body = {
+        currentPassword: e.target.currentPassword.value,
+        newPassword: e.target.newPassword.value
+      };
       const res = await fetch(`${API_URL}/api/auth/password`, {
         method: 'PUT',
         headers: {
-          'Content-Type':'application/json',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ currentPassword, newPassword })
+        body: JSON.stringify(body)
       });
       const json = await res.json();
       showToast(json.message || 'Password change failed', res.ok ? 'success' : 'danger');

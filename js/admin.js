@@ -9,6 +9,7 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
+// === ORDERS ===
 function fetchOrders() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
@@ -19,7 +20,7 @@ function fetchOrders() {
           <tr>
             <td>${o.id}</td>
             <td>${o.user_email}</td>
-            <td>$${o.total}</td>
+            <td>$${parseFloat(o.total).toFixed(2)}</td>
             <td>${o.status}</td>
             <td>
               <select class="form-select" onchange="updateOrderStatus(${o.id}, this.value)">
@@ -42,8 +43,9 @@ function updateOrderStatus(id, status) {
   }).then(() => showToast('Status updated', 'success'));
 }
 
+// === PRODUCTS ===
 function fetchProducts() {
-  fetch(`${API_URL}/api/products`)
+  fetch(`${API_URL}/api/products`, { headers })
     .then(r => r.json())
     .then(data => {
       const list = document.getElementById('productList');
@@ -51,7 +53,7 @@ function fetchProducts() {
         data.map(p => `
           <tr>
             <td>${p.name}</td>
-            <td>$${p.price}</td>
+            <td>$${parseFloat(p.price).toFixed(2)}</td>
             <td>
               <button class="btn btn-sm btn-warning me-1" onclick="editProduct(${encodeURIComponent(JSON.stringify(p))})">Edit</button>
               <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
@@ -112,8 +114,17 @@ function deleteProduct(id) {
   });
 }
 
-// Init
+// === INIT ===
 document.addEventListener('DOMContentLoaded', () => {
-  fetchOrders();
-  fetchProducts();
+  const tabs = document.getElementById('adminTabs');
+  if (tabs) {
+    tabs.addEventListener('click', (e) => {
+      const target = e.target.getAttribute('href');
+      if (target === '#orders') fetchOrders();
+      if (target === '#products') fetchProducts();
+    });
+
+    // load default tab content
+    fetchOrders();
+  }
 });

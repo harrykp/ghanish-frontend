@@ -20,7 +20,7 @@ function fetchOrders() {
           <tr>
             <td>${o.id}</td>
             <td>${o.user_email}</td>
-            <td>$${parseFloat(o.total).toFixed(2)}</td>
+            <td>GHS ${parseFloat(o.total).toFixed(2)}</td>
             <td>${o.status}</td>
             <td>
               <select class="form-select" onchange="updateOrderStatus(${o.id}, this.value)">
@@ -53,7 +53,7 @@ function fetchProducts() {
         data.map(p => `
           <tr>
             <td>${p.name}</td>
-            <td>$${parseFloat(p.price).toFixed(2)}</td>
+            <td>GHS ${parseFloat(p.price).toFixed(2)}</td>
             <td>
               <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
               <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
@@ -62,6 +62,7 @@ function fetchProducts() {
         '</tbody></table>';
     });
 }
+
 // Attach edit button handler using event delegation
 document.addEventListener('click', e => {
   if (e.target.classList.contains('edit-product-btn')) {
@@ -81,15 +82,24 @@ function showProductForm(p = {}) {
   document.getElementById('productDesc').value = p.description || '';
   document.getElementById('productPrice').value = p.price || '';
   document.getElementById('productImage').value = p.image_url || '';
+
+  // Show preview if available
+  const preview = document.getElementById('imagePreview');
+  if (p.image_url) {
+    preview.src = p.image_url;
+    preview.style.display = 'block';
+  } else {
+    preview.src = '';
+    preview.style.display = 'none';
+  }
 }
 
 function hideProductForm() {
   document.getElementById('productForm').classList.add('d-none');
-}
-
-function editProduct(data) {
-  const p = JSON.parse(decodeURIComponent(data));
-  showProductForm(p);
+  document.getElementById('productForm').reset();
+  const preview = document.getElementById('imagePreview');
+  preview.src = '';
+  preview.style.display = 'none';
 }
 
 function saveProduct(e) {
@@ -141,5 +151,22 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     fetchOrders(); // load default tab
+  }
+
+  // Image preview logic
+  const imageInput = document.getElementById('productImage');
+  const imagePreview = document.getElementById('imagePreview');
+
+  if (imageInput && imagePreview) {
+    imageInput.addEventListener('input', () => {
+      const url = imageInput.value.trim();
+      if (url) {
+        imagePreview.src = url;
+        imagePreview.style.display = 'block';
+      } else {
+        imagePreview.src = '';
+        imagePreview.style.display = 'none';
+      }
+    });
   }
 });

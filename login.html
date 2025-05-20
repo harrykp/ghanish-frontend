@@ -81,8 +81,9 @@
 
         const data = {
           email: form.email.value.trim(),
-          password: form.password.value
+          password: form.password.value.trim()
         };
+
 
         try {
           const res = await fetch(`${API_URL}/api/auth/login`, {

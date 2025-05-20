@@ -1,3 +1,5 @@
+// admin.js
+
 const token = localStorage.getItem('token');
 if (!token) {
   alert("Unauthorized");
@@ -82,24 +84,11 @@ function showProductForm(p = {}) {
   document.getElementById('productDesc').value = p.description || '';
   document.getElementById('productPrice').value = p.price || '';
   document.getElementById('productImage').value = p.image_url || '';
-
-  // Show preview if available
-  const preview = document.getElementById('imagePreview');
-  if (p.image_url) {
-    preview.src = p.image_url;
-    preview.style.display = 'block';
-  } else {
-    preview.src = '';
-    preview.style.display = 'none';
-  }
+  updateImagePreview(); // Update image preview when form is shown
 }
 
 function hideProductForm() {
   document.getElementById('productForm').classList.add('d-none');
-  document.getElementById('productForm').reset();
-  const preview = document.getElementById('imagePreview');
-  preview.src = '';
-  preview.style.display = 'none';
 }
 
 function saveProduct(e) {
@@ -135,6 +124,19 @@ function deleteProduct(id) {
   });
 }
 
+// === Image Preview ===
+function updateImagePreview() {
+  const url = document.getElementById('productImage').value.trim();
+  const img = document.getElementById('imagePreview');
+  if (url) {
+    img.src = url;
+    img.classList.remove('d-none');
+  } else {
+    img.src = '';
+    img.classList.add('d-none');
+  }
+}
+
 // === INIT + Tab Switching ===
 document.addEventListener('DOMContentLoaded', () => {
   const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
@@ -151,22 +153,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     fetchOrders(); // load default tab
-  }
-
-  // Image preview logic
-  const imageInput = document.getElementById('productImage');
-  const imagePreview = document.getElementById('imagePreview');
-
-  if (imageInput && imagePreview) {
-    imageInput.addEventListener('input', () => {
-      const url = imageInput.value.trim();
-      if (url) {
-        imagePreview.src = url;
-        imagePreview.style.display = 'block';
-      } else {
-        imagePreview.src = '';
-        imagePreview.style.display = 'none';
-      }
-    });
   }
 });

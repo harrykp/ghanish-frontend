@@ -1,19 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login – Ghanish</title>
-  <link rel="icon" href="images/ghanish-logo.png">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="css/styles.css" rel="stylesheet">
+  <link rel="icon" href="images/ghanish-logo.png" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="css/styles.css" rel="stylesheet" />
 </head>
 <body>
+  <div id="nav-placeholder"></div>
 
- <!-- Navbar -->
-<div id="nav-placeholder"></div>
-
-  <!-- Login Form -->
   <section class="py-5 fade-in">
     <div class="container">
       <h2 class="mb-4 text-center">Welcome Back</h2>
@@ -22,14 +19,11 @@
           <form id="loginForm">
             <div class="mb-3">
               <label for="email" class="form-label">Email *</label>
-              <input type="email" id="email" name="email" class="form-control" required>
+              <input type="email" id="email" name="email" class="form-control" required />
             </div>
             <div class="mb-3">
               <label for="password" class="form-label">Password *</label>
-              <input type="password" id="password" name="password" class="form-control" required>
-            </div>
-            <div class="mb-3 text-end">
-              <a href="forgot-password.html" class="small">Forgot Password?</a>
+              <input type="password" id="password" name="password" class="form-control" required />
             </div>
             <button type="submit" class="btn btn-primary w-100">Login</button>
           </form>
@@ -38,73 +32,45 @@
     </div>
   </section>
 
-  <!-- Footer (same as index.html) -->
-<div id="footer-placeholder"></div>
+  <div id="footer-placeholder"></div>
 
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/includes.js"></script>
   <script src="js/scripts.js"></script>
   <script>
-    // No duplicate const API_URL here—use the one from js/scripts.js
-    function showToast(message, type='info') {
-      const toastEl = document.createElement('div');
-      toastEl.className = `toast align-items-center text-bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
-      toastEl.setAttribute('role', 'alert');
-      toastEl.setAttribute('aria-live', 'assertive');
-      toastEl.innerHTML = `
-        <div class="d-flex">
-          <div class="toast-body">${message}</div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>`;
-      document.body.appendChild(toastEl);
-      const bsToast = new bootstrap.Toast(toastEl, { delay: 4000 });
-      bsToast.show();
-      toastEl.addEventListener('hidden.bs.toast', () => toastEl.remove());
-    }
+    const API_URL = 'https://ghanish-backend.onrender.com';
 
     document.addEventListener('DOMContentLoaded', () => {
       const form = document.getElementById('loginForm');
-      if (!form) return;
 
-      // Loader overlay
-      const loader = document.createElement('div');
-      loader.className = 'loading-overlay';
-      loader.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
-      document.body.appendChild(loader);
-
-      form.addEventListener('submit', async e => {
+      form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const submitBtn = form.querySelector('[type="submit"]');
-        loader.classList.add('show');
-        submitBtn.disabled = true;
-
-        const data = {
-          email: form.email.value.trim(),
-          password: form.password.value.trim()
-        };
-
+        const email = form.email.value.trim();
+        const password = form.password.value.trim();
+        const btn = form.querySelector('[type="submit"]');
+        btn.disabled = true;
 
         try {
           const res = await fetch(`${API_URL}/api/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify({ email, password })
           });
+
           const json = await res.json();
-          loader.classList.remove('show');
-          submitBtn.disabled = false;
+          btn.disabled = false;
 
           if (res.ok) {
             localStorage.setItem('token', json.token);
             showToast('Login successful! Redirecting...', 'success');
-            setTimeout(() => window.location.href = 'store.html', 1500);
+            setTimeout(() => {
+              const role = json.user?.role;
+              window.location.href = role === 'admin' ? 'admin.html' : 'store.html';
+            }, 1500);
           } else {
             showToast(json.error || 'Login failed', 'danger');
           }
         } catch (err) {
-          loader.classList.remove('show');
-          submitBtn.disabled = false;
+          btn.disabled = false;
           showToast('Network error. Please try again.', 'warning');
         }
       });

@@ -114,17 +114,21 @@ function deleteProduct(id) {
   });
 }
 
-// === INIT ===
+// === INIT + Tab Switching ===
 document.addEventListener('DOMContentLoaded', () => {
-  const tabs = document.getElementById('adminTabs');
-  if (tabs) {
-    tabs.addEventListener('click', (e) => {
-      const target = e.target.getAttribute('href');
-      if (target === '#orders') fetchOrders();
-      if (target === '#products') fetchProducts();
+  const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
+  if (tabButtons.length) {
+    const tabTrigger = new bootstrap.Tab(tabButtons[0]);
+    tabTrigger.show();
+
+    tabButtons.forEach(btn => {
+      btn.addEventListener('shown.bs.tab', e => {
+        const target = e.target.getAttribute('href');
+        if (target === '#orders') fetchOrders();
+        if (target === '#products') fetchProducts();
+      });
     });
 
-    // load default tab content
-    fetchOrders();
+    fetchOrders(); // load default tab
   }
 });

@@ -55,13 +55,24 @@ function fetchProducts() {
             <td>${p.name}</td>
             <td>$${parseFloat(p.price).toFixed(2)}</td>
             <td>
-              <button class="btn btn-sm btn-warning me-1" onclick="editProduct(${encodeURIComponent(JSON.stringify(p))})">Edit</button>
+              <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
               <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
             </td>
           </tr>`).join('') +
         '</tbody></table>';
     });
 }
+// Attach edit button handler using event delegation
+document.addEventListener('click', e => {
+  if (e.target.classList.contains('edit-product-btn')) {
+    try {
+      const productData = JSON.parse(e.target.dataset.product);
+      showProductForm(productData);
+    } catch (err) {
+      showToast('Failed to load product data', 'danger');
+    }
+  }
+});
 
 function showProductForm(p = {}) {
   document.getElementById('productForm').classList.remove('d-none');

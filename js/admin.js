@@ -10,7 +10,6 @@ const headers = {
   'Authorization': `Bearer ${token}`,
   'Content-Type': 'application/json'
 };
-console.log('Token role check:', localStorage.getItem('token'));
 
 function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
@@ -27,7 +26,6 @@ function loadStats() {
     });
 }
 
-
 // === ORDERS ===
 function fetchOrders() {
   fetch(`${API_URL}/api/orders/all`, { headers })
@@ -42,15 +40,11 @@ function fetchOrders() {
               <strong>${o.full_name || '—'}</strong><br/>
               <small>${o.phone || '–'}</small>
             </td>
-
             <td>USD ${parseFloat(o.total).toFixed(2)}</td>
             <td>${o.status}</td>
             <td>
-              <button class="btn btn-sm btn-info me-2" onclick="viewOrderDetails(${o.id}, '${o.full_name}', '${o.phone}', '${o.status}', '${o.created_at}', ${o.total})">
-                View
-              </button>
+              <button class="btn btn-sm btn-info me-2" onclick="viewOrderDetails(${o.id}, '${o.full_name}', '${o.phone}', '${o.status}', '${o.created_at}', ${o.total})">View</button>
               <select class="form-select mt-1" onchange="updateOrderStatus(${o.id}, this.value)">
-
                 ${['pending','processing','shipped','delivered'].map(s =>
                   `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`
                 ).join('')}
@@ -92,21 +86,8 @@ function fetchProducts() {
             </td>
           </tr>`).join('') +
         '</tbody></table>';
-
     });
 }
-
-// Attach edit button handler using event delegation
-document.addEventListener('click', e => {
-  if (e.target.classList.contains('edit-product-btn')) {
-    try {
-      const productData = JSON.parse(e.target.dataset.product);
-      showProductForm(productData);
-    } catch (err) {
-      showToast('Failed to load product data', 'danger');
-    }
-  }
-});
 
 function showProductForm(p = {}) {
   document.getElementById('productForm').classList.remove('d-none');
@@ -116,15 +97,9 @@ function showProductForm(p = {}) {
   document.getElementById('productPrice').value = p.price || '';
   document.getElementById('productStock').value = p.stock || '';
   document.getElementById('productImage').value = p.image_url || '';
-
-  // 🔥 Set form title based on mode
-  const title = document.getElementById('productFormTitle');
-  title.textContent = p.id ? 'Edit Product' : 'New Product';
-
-  // Trigger image preview
+  document.getElementById('productFormTitle').textContent = p.id ? 'Edit Product' : 'New Product';
   updateImagePreview();
 }
-
 
 function hideProductForm() {
   document.getElementById('productForm').reset();
@@ -133,7 +108,6 @@ function hideProductForm() {
   preview.src = '';
   preview.classList.add('d-none');
 }
-
 
 function saveProduct(e) {
   e.preventDefault();
@@ -182,27 +156,7 @@ function updateImagePreview() {
   }
 }
 
-// === INIT + Tab Switching ===
-document.addEventListener('DOMContentLoaded', () => {
-  const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
-  if (tabButtons.length) {
-    const tabTrigger = new bootstrap.Tab(tabButtons[0]);
-    tabTrigger.show();
-
-    tabButtons.forEach(btn => {
-      btn.addEventListener('shown.bs.tab', e => {
-        const target = e.target.getAttribute('href');
-        if (target === '#orders') fetchOrders();
-        if (target === '#products') fetchProducts();
-      });
-    });
-
-    // Load the default tab data
-    fetchOrders();
-
-    // Load dashboard stats
-    loadStats();  
-  }
+// === VIEW ORDER DETAILS ===
 function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   document.getElementById('modalCustomerName').textContent = full_name || '–';
   document.getElementById('modalCustomerPhone').textContent = phone || '–';
@@ -236,5 +190,34 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   new bootstrap.Modal(document.getElementById('orderModal')).show();
 }
 
+// === INIT ===
+document.addEventListener('DOMContentLoaded', () => {
+  const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
+  if (tabButtons.length) {
+    const tabTrigger = new bootstrap.Tab(tabButtons[0]);
+    tabTrigger.show();
 
+    tabButtons.forEach(btn => {
+      btn.addEventListener('shown.bs.tab', e => {
+        const target = e.target.getAttribute('href');
+        if (target === '#orders') fetchOrders();
+        if (target === '#products') fetchProducts();
+      });
+    });
+
+    fetchOrders();
+    loadStats();
+  }
+
+  // Register edit-product button events
+  document.addEventListener('click', e => {
+    if (e.target.classList.contains('edit-product-btn')) {
+      try {
+        const productData = JSON.parse(e.target.dataset.product);
+        showProductForm(productData);
+      } catch (err) {
+        showToast('Failed to load product data', 'danger');
+      }
+    }
+  });
 });

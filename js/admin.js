@@ -10,6 +10,7 @@ const headers = {
   'Authorization': `Bearer ${token}`,
   'Content-Type': 'application/json'
 };
+console.log('Token role check:', localStorage.getItem('token'));
 
 function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
@@ -76,7 +77,7 @@ function fetchProducts() {
                 <span>${p.name}</span>
               </div>
             </td>
-            <td>GHS ${parseFloat(p.price).toFixed(2)}</td>
+            <td>USD ${parseFloat(p.price).toFixed(2)}</td>
             <td>
               <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
               <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
@@ -188,10 +189,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // ✅ Load the default tab data
+    // Load the default tab data
     fetchOrders();
 
-    // ✅ Load dashboard stats
-    loadStats();  // ⬅️ Add this here
+    // Load dashboard stats
+    loadStats();  
   }
 });

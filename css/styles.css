@@ -96,7 +96,7 @@ footer a:hover {
 }
 /* Make product images uniform size and cards same height */
 .card-img-top {
-  height: 200px;             /* or adjust to fit your design */
+  height: 300px;             /* or adjust to fit your design */
   object-fit: cover;
 }
 

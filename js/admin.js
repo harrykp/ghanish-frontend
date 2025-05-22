@@ -22,7 +22,7 @@ function fetchOrders() {
           <tr>
             <td>${o.id}</td>
             <td>${o.user_email}</td>
-            <td>GHS ${parseFloat(o.total).toFixed(2)}</td>
+            <td>USD ${parseFloat(o.total).toFixed(2)}</td>
             <td>${o.status}</td>
             <td>
               <select class="form-select" onchange="updateOrderStatus(${o.id}, this.value)">
@@ -55,7 +55,7 @@ function fetchProducts() {
         data.map(p => `
           <tr>
             <td>${p.name}</td>
-            <td>GHS ${parseFloat(p.price).toFixed(2)}</td>
+            <td>USD ${parseFloat(p.price).toFixed(2)}</td>
             <td>
               <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
               <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>

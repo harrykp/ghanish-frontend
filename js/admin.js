@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadStats();  
   }
 function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
-  document.getElementById('modalCustomerName').textContent = fullName || '–';
+  document.getElementById('modalCustomerName').textContent = full_name || '–';
   document.getElementById('modalCustomerPhone').textContent = phone || '–';
   document.getElementById('modalOrderStatus').textContent = status;
   document.getElementById('modalOrderDate').textContent = new Date(createdAt).toLocaleString();

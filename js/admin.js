@@ -210,7 +210,6 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   document.getElementById('modalOrderDate').textContent = new Date(createdAt).toLocaleString();
   document.getElementById('modalOrderTotal').textContent = `USD ${parseFloat(total).toFixed(2)}`;
 
-  // Clear and fetch items
   const body = document.getElementById('modalItemsBody');
   body.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
 
@@ -236,5 +235,6 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
 
   new bootstrap.Modal(document.getElementById('orderModal')).show();
 }
+
 
 });

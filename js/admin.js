@@ -38,7 +38,11 @@ function fetchOrders() {
         data.map(o => `
           <tr>
             <td>${o.id}</td>
-            <td>${o.user_email}</td>
+            <td>
+              <strong>${o.full_name || '—'}</strong><br/>
+              <small>${o.phone || '–'}</small>
+            </td>
+
             <td>USD ${parseFloat(o.total).toFixed(2)}</td>
             <td>${o.status}</td>
             <td>

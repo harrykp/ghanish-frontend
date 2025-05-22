@@ -54,14 +54,20 @@ function fetchProducts() {
       list.innerHTML = '<table class="table table-bordered"><thead><tr><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>' +
         data.map(p => `
           <tr>
-            <td>${p.name}</td>
-            <td>USD ${parseFloat(p.price).toFixed(2)}</td>
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                ${p.image_url ? `<img src="${p.image_url}" alt="" style="height:40px;">` : ''}
+                <span>${p.name}</span>
+              </div>
+            </td>
+            <td>GHS ${parseFloat(p.price).toFixed(2)}</td>
             <td>
               <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
               <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
             </td>
           </tr>`).join('') +
         '</tbody></table>';
+
     });
 }
 
@@ -96,8 +102,13 @@ function showProductForm(p = {}) {
 
 
 function hideProductForm() {
+  document.getElementById('productForm').reset();
   document.getElementById('productForm').classList.add('d-none');
+  const preview = document.getElementById('imagePreview');
+  preview.src = '';
+  preview.classList.add('d-none');
 }
+
 
 function saveProduct(e) {
   e.preventDefault();

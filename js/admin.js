@@ -203,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load dashboard stats
     loadStats();  
   }
-function viewOrderDetails(orderId, fullName, phone, status, createdAt, total) {
+function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   document.getElementById('modalCustomerName').textContent = fullName || '–';
   document.getElementById('modalCustomerPhone').textContent = phone || '–';
   document.getElementById('modalOrderStatus').textContent = status;

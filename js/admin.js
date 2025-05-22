@@ -46,7 +46,11 @@ function fetchOrders() {
             <td>USD ${parseFloat(o.total).toFixed(2)}</td>
             <td>${o.status}</td>
             <td>
-              <select class="form-select" onchange="updateOrderStatus(${o.id}, this.value)">
+              <button class="btn btn-sm btn-info me-2" onclick="viewOrderDetails(${o.id}, '${o.full_name}', '${o.phone}', '${o.status}', '${o.created_at}', ${o.total})">
+                View
+              </button>
+              <select class="form-select mt-1" onchange="updateOrderStatus(${o.id}, this.value)">
+
                 ${['pending','processing','shipped','delivered'].map(s =>
                   `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`
                 ).join('')}
@@ -199,4 +203,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // Load dashboard stats
     loadStats();  
   }
+function viewOrderDetails(orderId, fullName, phone, status, createdAt, total) {
+  document.getElementById('modalCustomerName').textContent = fullName || '–';
+  document.getElementById('modalCustomerPhone').textContent = phone || '–';
+  document.getElementById('modalOrderStatus').textContent = status;
+  document.getElementById('modalOrderDate').textContent = new Date(createdAt).toLocaleString();
+  document.getElementById('modalOrderTotal').textContent = `USD ${parseFloat(total).toFixed(2)}`;
+
+  // Clear and fetch items
+  const body = document.getElementById('modalItemsBody');
+  body.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+
+  fetch(`${API_URL}/api/orders/${orderId}`, { headers })
+    .then(r => r.json())
+    .then(order => {
+      if (!order.items || !order.items.length) {
+        body.innerHTML = '<tr><td colspan="4">No items found</td></tr>';
+        return;
+      }
+      body.innerHTML = order.items.map(item => `
+        <tr>
+          <td>${item.product_name}</td>
+          <td>${item.quantity}</td>
+          <td>USD ${parseFloat(item.unit_price).toFixed(2)}</td>
+          <td>USD ${parseFloat(item.subtotal).toFixed(2)}</td>
+        </tr>
+      `).join('');
+    })
+    .catch(() => {
+      body.innerHTML = '<tr><td colspan="4">Failed to load items</td></tr>';
+    });
+
+  new bootstrap.Modal(document.getElementById('orderModal')).show();
+}
+
 });

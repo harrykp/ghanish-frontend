@@ -85,8 +85,15 @@ function showProductForm(p = {}) {
   document.getElementById('productPrice').value = p.price || '';
   document.getElementById('productStock').value = p.stock || '';
   document.getElementById('productImage').value = p.image_url || '';
-  updateImagePreview(); // Update image preview when form is shown
+
+  // 🔥 Set form title based on mode
+  const title = document.getElementById('productFormTitle');
+  title.textContent = p.id ? 'Edit Product' : 'New Product';
+
+  // Trigger image preview
+  updateImagePreview();
 }
+
 
 function hideProductForm() {
   document.getElementById('productForm').classList.add('d-none');

@@ -89,10 +89,32 @@ footer a:hover {
   height: auto;
   display: inline-block;
 }
-.70%-width {
+.width-70 {
   max-width: 70%;
   height: auto;
   display: inline-block;
 }
+/* Make product images uniform size and cards same height */
+.card-img-top {
+  height: 200px;             /* or adjust to fit your design */
+  object-fit: cover;
+}
+
+.card {
+  height: 100%;              /* makes all cards same height in a row */
+  display: flex;
+  flex-direction: column;
+}
+
+.card-body {
+  flex: 1 1 auto;            /* ensures body stretches to fill card */
+  display: flex;
+  flex-direction: column;
+}
+
+.card .mt-auto {
+  margin-top: auto;
+}
+
 
 

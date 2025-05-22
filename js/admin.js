@@ -167,7 +167,7 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   const body = document.getElementById('modalItemsBody');
   body.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
 
-  fetch(`${API_URL}/api/orders/${orderId}`, { headers })
+  fetch(`${API_URL}/api/orders/${orderId}/admin`, { headers })
     .then(r => r.json())
     .then(order => {
       if (!order.items || !order.items.length) {

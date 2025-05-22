@@ -83,6 +83,7 @@ function showProductForm(p = {}) {
   document.getElementById('productName').value = p.name || '';
   document.getElementById('productDesc').value = p.description || '';
   document.getElementById('productPrice').value = p.price || '';
+  document.getElementById('productStock').value = p.stock || '';
   document.getElementById('productImage').value = p.image_url || '';
   updateImagePreview(); // Update image preview when form is shown
 }
@@ -98,6 +99,7 @@ function saveProduct(e) {
     name: document.getElementById('productName').value,
     description: document.getElementById('productDesc').value,
     price: document.getElementById('productPrice').value,
+    stock: document.getElementById('productStock').value,
     image_url: document.getElementById('productImage').value
   };
   const method = id ? 'PUT' : 'POST';

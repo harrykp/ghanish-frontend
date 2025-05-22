@@ -11,6 +11,22 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
+function loadStats() {
+  fetch(`${API_URL}/api/orders/all`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('statOrders').textContent = data.length;
+      document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
+    });
+
+  fetch(`${API_URL}/api/products`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('statProducts').textContent = data.length;
+    });
+}
+
+
 // === ORDERS ===
 function fetchOrders() {
   fetch(`${API_URL}/api/orders/all`, { headers })
@@ -172,6 +188,10 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    fetchOrders(); // load default tab
+    // ✅ Load the default tab data
+    fetchOrders();
+
+    // ✅ Load dashboard stats
+    loadStats();  // ⬅️ Add this here
   }
 });

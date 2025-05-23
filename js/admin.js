@@ -199,7 +199,6 @@ function deleteProduct(id) {
     });
 }
 
-// === Image Preview ===
 function updateImagePreview() {
   const url = document.getElementById('productImage').value.trim();
   const img = document.getElementById('imagePreview');
@@ -212,7 +211,6 @@ function updateImagePreview() {
   }
 }
 
-// === Modal: Order Details ===
 function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   document.getElementById('modalCustomerName').textContent = full_name || '–';
   document.getElementById('modalCustomerPhone').textContent = phone || '–';
@@ -247,10 +245,10 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   new bootstrap.Modal(document.getElementById('orderModal')).show();
 }
 
-// === Revenue Analytics Chart ===
+// === Revenue Chart ===
 function fetchRevenueAnalytics() {
   fetch(`${API_URL}/api/admin/revenue`, { headers })
-    .then(r => r.json())
+    .then(res => res.json())
     .then(data => {
       const ctx = document.getElementById('revenueChart').getContext('2d');
       new Chart(ctx, {
@@ -258,7 +256,7 @@ function fetchRevenueAnalytics() {
         data: {
           labels: data.labels,
           datasets: [{
-            label: 'Monthly Revenue (USD)',
+            label: 'Revenue',
             data: data.values,
             backgroundColor: 'rgba(54, 162, 235, 0.6)',
             borderRadius: 5
@@ -268,14 +266,17 @@ function fetchRevenueAnalytics() {
           responsive: true,
           scales: {
             y: {
-              beginAtZero: true
+              beginAtZero: true,
+              ticks: {
+                callback: value => '$' + value
+              }
             }
           }
         }
       });
     })
     .catch(err => {
-      console.error('Failed to load revenue analytics', err);
+      console.error('Failed to load revenue data:', err);
     });
 }
 

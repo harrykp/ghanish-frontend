@@ -11,6 +11,8 @@ const headers = {
   'Content-Type': 'application/json'
 };
 
+let allOrders = [];
+
 function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
@@ -31,9 +33,18 @@ function fetchOrders() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      const list = document.getElementById('orderList');
-      list.innerHTML = '<table class="table table-bordered"><thead><tr><th>ID</th><th>User</th><th>Total</th><th>Status</th><th>Change</th></tr></thead><tbody>' +
-        data.map(o => `
+      allOrders = data;
+      renderOrderTable(allOrders);
+    });
+}
+
+function renderOrderTable(orders) {
+  const list = document.getElementById('orderList');
+  list.innerHTML = `
+    <table class="table table-bordered">
+      <thead><tr><th>ID</th><th>User</th><th>Total</th><th>Status</th><th>Change</th></tr></thead>
+      <tbody>
+        ${orders.map(o => `
           <tr>
             <td>${o.id}</td>
             <td>
@@ -46,14 +57,13 @@ function fetchOrders() {
               <button class="btn btn-sm btn-info me-2" onclick="viewOrderDetails(${o.id}, '${o.full_name}', '${o.phone}', '${o.status}', '${o.created_at}', ${o.total})">View</button>
               <select class="form-select mt-1" onchange="updateOrderStatus(${o.id}, this.value)">
                 ${['pending','processing','shipped','delivered'].map(s =>
-                  `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`
-                ).join('')}
+                  `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
               </select>
             </td>
           </tr>
-        `).join('') +
-        '</tbody></table>';
-    });
+        `).join('')}
+      </tbody>
+    </table>`;
 }
 
 function updateOrderStatus(id, status) {
@@ -61,8 +71,57 @@ function updateOrderStatus(id, status) {
     method: 'PUT',
     headers,
     body: JSON.stringify({ status })
-  }).then(() => showToast('Status updated', 'success'));
+  }).then(() => {
+    showToast('Status updated', 'success');
+    fetchOrders();
+  });
 }
+
+function exportOrdersToCSV() {
+  const rows = [
+    ['Order ID', 'Name', 'Phone', 'Total', 'Status', 'Created At'],
+    ...allOrders.map(o => [
+      o.id, o.full_name || '-', o.phone || '-', o.total, o.status, o.created_at
+    ])
+  ];
+  const csv = rows.map(r => r.map(x => `"${x}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `orders-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function printOrderModal() {
+  const modalContent = document.querySelector('#orderModal .modal-content').innerHTML;
+  const win = window.open('', '_blank', 'width=800,height=600');
+  win.document.write(`
+    <html><head><title>Print Order</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head><body>${modalContent}</body></html>
+  `);
+  win.document.close();
+  win.focus();
+  setTimeout(() => {
+    win.print();
+    win.close();
+  }, 500);
+}
+
+document.getElementById('orderFilterInput')?.addEventListener('input', e => {
+  const val = e.target.value.trim().toLowerCase();
+  const filtered = allOrders.filter(o => 
+    o.status.toLowerCase().includes(val) ||
+    o.full_name?.toLowerCase().includes(val) ||
+    o.phone?.toLowerCase().includes(val)
+  );
+  renderOrderTable(filtered);
+});
 
 // === PRODUCTS ===
 function fetchProducts() {
@@ -70,22 +129,26 @@ function fetchProducts() {
     .then(r => r.json())
     .then(data => {
       const list = document.getElementById('productList');
-      list.innerHTML = '<table class="table table-bordered"><thead><tr><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>' +
-        data.map(p => `
-          <tr>
-            <td>
-              <div class="d-flex align-items-center gap-2">
-                ${p.image_url ? `<img src="${p.image_url}" alt="" style="height:40px;">` : ''}
-                <span>${p.name}</span>
-              </div>
-            </td>
-            <td>USD ${parseFloat(p.price).toFixed(2)}</td>
-            <td>
-              <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
-            </td>
-          </tr>`).join('') +
-        '</tbody></table>';
+      list.innerHTML = `
+        <table class="table table-bordered">
+          <thead><tr><th>Name</th><th>Price</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${data.map(p => `
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    ${p.image_url ? `<img src="${p.image_url}" alt="" style="height:40px;">` : ''}
+                    <span>${p.name}</span>
+                  </div>
+                </td>
+                <td>USD ${parseFloat(p.price).toFixed(2)}</td>
+                <td>
+                  <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
+                  <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
     });
 }
 
@@ -121,26 +184,21 @@ function saveProduct(e) {
   };
   const method = id ? 'PUT' : 'POST';
   const url = id ? `${API_URL}/api/products/${id}` : `${API_URL}/api/products`;
-  fetch(url, {
-    method,
-    headers,
-    body: JSON.stringify(body)
-  }).then(() => {
-    showToast('Product saved', 'success');
-    hideProductForm();
-    fetchProducts();
-  });
+  fetch(url, { method, headers, body: JSON.stringify(body) })
+    .then(() => {
+      showToast('Product saved', 'success');
+      hideProductForm();
+      fetchProducts();
+    });
 }
 
 function deleteProduct(id) {
   if (!confirm('Are you sure?')) return;
-  fetch(`${API_URL}/api/products/${id}`, {
-    method: 'DELETE',
-    headers
-  }).then(() => {
-    showToast('Product deleted', 'success');
-    fetchProducts();
-  });
+  fetch(`${API_URL}/api/products/${id}`, { method: 'DELETE', headers })
+    .then(() => {
+      showToast('Product deleted', 'success');
+      fetchProducts();
+    });
 }
 
 // === Image Preview ===
@@ -156,13 +214,14 @@ function updateImagePreview() {
   }
 }
 
-// === VIEW ORDER DETAILS ===
+// === Modal: Order Details ===
 function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   document.getElementById('modalCustomerName').textContent = full_name || '–';
   document.getElementById('modalCustomerPhone').textContent = phone || '–';
   document.getElementById('modalOrderStatus').textContent = status;
   document.getElementById('modalOrderDate').textContent = new Date(createdAt).toLocaleString();
   document.getElementById('modalOrderTotal').textContent = `USD ${parseFloat(total).toFixed(2)}`;
+  document.getElementById('modalViewProfileLink').href = `profile.html?user=${encodeURIComponent(full_name)}`;
 
   const body = document.getElementById('modalItemsBody');
   body.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
@@ -190,13 +249,12 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   new bootstrap.Modal(document.getElementById('orderModal')).show();
 }
 
-// === INIT ===
+// === Init ===
 document.addEventListener('DOMContentLoaded', () => {
   const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
   if (tabButtons.length) {
     const tabTrigger = new bootstrap.Tab(tabButtons[0]);
     tabTrigger.show();
-
     tabButtons.forEach(btn => {
       btn.addEventListener('shown.bs.tab', e => {
         const target = e.target.getAttribute('href');
@@ -204,12 +262,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target === '#products') fetchProducts();
       });
     });
-
     fetchOrders();
     loadStats();
   }
 
-  // Register edit-product button events
   document.addEventListener('click', e => {
     if (e.target.classList.contains('edit-product-btn')) {
       try {

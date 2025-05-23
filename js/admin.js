@@ -1,5 +1,3 @@
-// admin.js
-
 const token = localStorage.getItem('token');
 if (!token) {
   alert("Unauthorized");
@@ -115,7 +113,7 @@ function printOrderModal() {
 
 document.getElementById('orderFilterInput')?.addEventListener('input', e => {
   const val = e.target.value.trim().toLowerCase();
-  const filtered = allOrders.filter(o => 
+  const filtered = allOrders.filter(o =>
     o.status.toLowerCase().includes(val) ||
     o.full_name?.toLowerCase().includes(val) ||
     o.phone?.toLowerCase().includes(val)
@@ -249,6 +247,38 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   new bootstrap.Modal(document.getElementById('orderModal')).show();
 }
 
+// === Revenue Analytics Chart ===
+function fetchRevenueAnalytics() {
+  fetch(`${API_URL}/api/admin/revenue`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      const ctx = document.getElementById('revenueChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: data.labels,
+          datasets: [{
+            label: 'Monthly Revenue (USD)',
+            data: data.values,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    })
+    .catch(err => {
+      console.error('Failed to load revenue analytics', err);
+    });
+}
+
 // === Init ===
 document.addEventListener('DOMContentLoaded', () => {
   const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
@@ -260,6 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const target = e.target.getAttribute('href');
         if (target === '#orders') fetchOrders();
         if (target === '#products') fetchProducts();
+        if (target === '#analytics') fetchRevenueAnalytics();
       });
     });
     fetchOrders();

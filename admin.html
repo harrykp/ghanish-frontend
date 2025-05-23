@@ -16,6 +16,7 @@
     <div class="container">
       <h2 class="mb-4 text-center">Admin Dashboard</h2>
 
+      <!-- Admin Stats -->
       <div class="row text-center mb-4" id="adminStats">
         <div class="col-md-4">
           <div class="card shadow-sm"><div class="card-body"><h5>Total Orders</h5><div id="statOrders" class="fs-4">–</div></div></div>
@@ -52,7 +53,7 @@
             <button class="btn btn-primary" onclick="showProductForm()">+ New Product</button>
           </div>
           <div id="productList" class="mb-4"></div>
-          <!-- Product Form -->
+
           <form id="productForm" class="border p-3 d-none" onsubmit="saveProduct(event)">
             <h6 class="mb-3" id="productFormTitle">New Product</h6>
             <input type="hidden" id="productId" />
@@ -72,6 +73,7 @@
           </form>
         </div>
 
+        <!-- Analytics Chart Tab -->
         <div class="tab-pane fade" id="analytics">
           <h5 class="mb-3">Monthly Revenue (USD)</h5>
           <canvas id="revenueChart" height="100"></canvas>

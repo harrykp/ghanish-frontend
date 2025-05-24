@@ -53,10 +53,31 @@
           <form id="productForm" class="border p-3 d-none" onsubmit="saveProduct(event)">
             <h6 class="mb-3" id="productFormTitle">New Product</h6>
             <input type="hidden" id="productId" />
-            <div class="mb-2"><label class="form-label">Product Name</label><input type="text" id="productName" class="form-control" required /></div>
-            <div class="mb-2"><label class="form-label">Description</label><textarea id="productDesc" class="form-control"></textarea></div>
-            <div class="mb-2"><label class="form-label">Price (USD)</label><input type="number" id="productPrice" class="form-control" step="0.01" required /></div>
-            <div class="mb-2"><label class="form-label">Stock</label><input type="number" id="productStock" class="form-control" step="1" min="0" required /></div>
+            <div class="mb-2">
+              <label class="form-label">Product Name</label>
+              <input type="text" id="productName" class="form-control" required />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Description</label>
+              <textarea id="productDesc" class="form-control"></textarea>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Price (USD)</label>
+              <input type="number" id="productPrice" class="form-control" step="0.01" required />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Stock</label>
+              <input type="number" id="productStock" class="form-control" step="1" min="0" required />
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Category</label>
+              <select id="productCategory" class="form-select" required>
+                <option value="">Select Category</option>
+                <option value="Shrimp">Shrimp</option>
+                <option value="Fish">Fish</option>
+                <option value="Seasoning">Seasoning</option>
+              </select>
+            </div>
             <div class="mb-3">
               <label class="form-label">Image URL</label>
               <input type="url" id="productImage" class="form-control" oninput="updateImagePreview()" />
@@ -67,6 +88,7 @@
               <button type="button" class="btn btn-secondary" onclick="hideProductForm()">Cancel</button>
             </div>
           </form>
+
         </div>
 
         <!-- Analytics Tab -->

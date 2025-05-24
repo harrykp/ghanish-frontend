@@ -11,7 +11,6 @@ const headers = {
 
 let allOrders = [];
 
-// === DASHBOARD STATS ===
 function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
@@ -249,7 +248,7 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   new bootstrap.Modal(document.getElementById('orderModal')).show();
 }
 
-// === Revenue Analytics Chart ===
+// === Revenue Analytics + Top Products Charts ===
 function fetchRevenueAnalytics() {
   fetch(`${API_URL}/api/admin/revenue`, { headers })
     .then(r => r.json())
@@ -269,19 +268,108 @@ function fetchRevenueAnalytics() {
         options: {
           responsive: true,
           scales: {
-            y: {
-              beginAtZero: true
-            }
+            y: { beginAtZero: true }
           }
         }
       });
-    })
-    .catch(err => {
-      console.error('Failed to load revenue analytics', err);
+    });
+
+  // === Top Selling Products Chart ===
+  fetch(`${API_URL}/api/admin/analytics`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      const ctx = document.getElementById('topProductsChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: data.topProducts.labels,
+          datasets: [{
+            data: data.topProducts.values,
+            backgroundColor: [
+              '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    });
+}
+  // === Discounts ===
+function fetchDiscountCodes() {
+  fetch(`${API_URL}/api/discounts`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      const list = document.getElementById('discountList');
+      if (!data.length) {
+        list.innerHTML = '<p>No codes found.</p>';
+        return;
+      }
+      list.innerHTML = `
+        <table class="table table-bordered">
+          <thead><tr><th>Code</th><th>% Off</th><th>Expires</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${data.map(d => `
+              <tr>
+                <td>${d.code}</td>
+                <td>${d.percent_off}%</td>
+                <td>${d.expires_at ? new Date(d.expires_at).toLocaleString() : '—'}</td>
+                <td><button class="btn btn-sm btn-danger" onclick="deleteDiscountCode(${d.id})">Delete</button></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      `;
     });
 }
 
-// === INIT ===
+function showDiscountForm() {
+  document.getElementById('discountForm').classList.remove('d-none');
+}
+
+function hideDiscountForm() {
+  document.getElementById('discountForm').classList.add('d-none');
+  document.getElementById('discountForm').reset();
+}
+
+function saveDiscountCode(e) {
+  e.preventDefault();
+  const body = {
+    code: document.getElementById('discountCode').value,
+    percent_off: document.getElementById('discountPercent').value,
+    expires_at: document.getElementById('discountExpires').value || null
+  };
+  fetch(`${API_URL}/api/discounts`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body)
+  }).then(res => {
+    if (res.ok) {
+      showToast('Discount code added', 'success');
+      hideDiscountForm();
+      fetchDiscountCodes();
+    } else {
+      showToast('Failed to add code', 'danger');
+    }
+  });
+}
+
+function deleteDiscountCode(id) {
+  if (!confirm('Delete this code?')) return;
+  fetch(`${API_URL}/api/discounts/${id}`, {
+    method: 'DELETE',
+    headers
+  }).then(() => {
+    showToast('Code deleted', 'success');
+    fetchDiscountCodes();
+  });
+}
+
+
+// === Init ===
 document.addEventListener('DOMContentLoaded', () => {
   const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
   if (tabButtons.length) {
@@ -293,12 +381,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target === '#orders') fetchOrders();
         if (target === '#products') fetchProducts();
         if (target === '#analytics') fetchRevenueAnalytics();
+        if (target === '#discounts') fetchDiscountCodes();
       });
     });
+    fetchOrders();
+    loadStats();
   }
-
-  fetchOrders();   // ensure orders are loaded initially
-  loadStats();     // ensure stats are loaded on page load
 
   document.addEventListener('click', e => {
     if (e.target.classList.contains('edit-product-btn')) {

@@ -15,19 +15,24 @@ function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      console.log("Stats orders response:", data); // 👈 DEBUG
+      console.log('Stats orders response:', data);
       if (Array.isArray(data)) {
         document.getElementById('statOrders').textContent = data.length;
         document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
-      } else {
-        document.getElementById('statOrders').textContent = '0';
-        document.getElementById('statPending').textContent = '0';
       }
-    })
-    .catch(err => {
-      console.error("Failed to load stats:", err);
+    });
+
+  // ✅ Add this missing block
+  fetch(`${API_URL}/api/products`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      console.log('Stats products response:', data);
+      if (Array.isArray(data)) {
+        document.getElementById('statProducts').textContent = data.length;
+      }
     });
 }
+
 
 // === ORDERS ===
 function fetchOrders() {

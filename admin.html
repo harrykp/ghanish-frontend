@@ -58,11 +58,24 @@
           <form id="productForm" class="border p-3 d-none" onsubmit="saveProduct(event)">
             <h6 class="mb-3" id="productFormTitle">New Product</h6>
             <input type="hidden" id="productId" />
-            <div class="mb-2"><label class="form-label">Product Name</label><input type="text" id="productName" class="form-control" required /></div>
-            <div class="mb-2"><label class="form-label">Description</label><textarea id="productDesc" class="form-control"></textarea></div>
-            <div class="mb-2"><label class="form-label">Price (USD)</label><input type="number" id="productPrice" class="form-control" step="0.01" required /></div>
-            <div class="mb-2"><label class="form-label">Stock</label><input type="number" id="productStock" class="form-control" step="1" min="0" required /></div>
-            <div class="mb-2"><label class="form-label">Category</label>
+            <div class="mb-2">
+              <label for="productName" class="form-label">Product Name</label>
+              <input type="text" id="productName" class="form-control" required />
+            </div>
+            <div class="mb-2">
+              <label for="productDesc" class="form-label">Description</label>
+              <textarea id="productDesc" class="form-control"></textarea>
+            </div>
+            <div class="mb-2">
+              <label for="productPrice" class="form-label">Price (USD)</label>
+              <input type="number" id="productPrice" class="form-control" step="0.01" required />
+            </div>
+            <div class="mb-2">
+              <label for="productStock" class="form-label">Stock</label>
+              <input type="number" id="productStock" class="form-control" step="1" min="0" required />
+            </div>
+            <div class="mb-2">
+              <label for="productCategory" class="form-label">Category</label>
               <select id="productCategory" class="form-select" required>
                 <option value="">Select Category</option>
                 <option value="Shrimp">Shrimp</option>
@@ -70,7 +83,8 @@
                 <option value="Seasoning">Seasoning</option>
               </select>
             </div>
-            <div class="mb-3"><label class="form-label">Image URL</label>
+            <div class="mb-3">
+              <label for="productImage" class="form-label">Image URL</label>
               <input type="url" id="productImage" class="form-control" oninput="updateImagePreview()" />
               <div class="mt-2"><img id="imagePreview" src="" alt="" class="img-fluid border d-none" style="max-height: 200px;" /></div>
             </div>
@@ -97,12 +111,20 @@
             <button class="btn btn-success" onclick="showDiscountForm()">+ New Code</button>
           </div>
           <div id="discountList" class="mb-3"></div>
-        
           <form id="discountForm" class="border p-3 d-none" onsubmit="saveDiscountCode(event)">
             <h6 class="mb-3">New Discount Code</h6>
-            <div class="mb-2"><label class="form-label">Code</label><input type="text" id="discountCode" class="form-control" required></div>
-            <div class="mb-2"><label class="form-label">% Off</label><input type="number" id="discountPercent" class="form-control" min="1" max="100" required></div>
-            <div class="mb-3"><label class="form-label">Expires At</label><input type="datetime-local" id="discountExpires" class="form-control"></div>
+            <div class="mb-2">
+              <label for="discountCode" class="form-label">Code</label>
+              <input type="text" id="discountCode" class="form-control" required>
+            </div>
+            <div class="mb-2">
+              <label for="discountPercent" class="form-label">% Off</label>
+              <input type="number" id="discountPercent" class="form-control" min="1" max="100" required>
+            </div>
+            <div class="mb-3">
+              <label for="discountExpires" class="form-label">Expires At</label>
+              <input type="datetime-local" id="discountExpires" class="form-control">
+            </div>
             <button type="submit" class="btn btn-success">Save</button>
             <button type="button" class="btn btn-secondary ms-2" onclick="hideDiscountForm()">Cancel</button>
           </form>
@@ -112,41 +134,41 @@
         <div class="tab-pane fade" id="users">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">Manage Users</h5>
-            <button class="btn btn-success" onclick="showUserForm()">+ New User</button>
+            <button class="btn btn-primary" onclick="showUserForm()">+ New User</button>
           </div>
-          <div id="userList" class="mb-3"></div>
-        
+          <div id="userList" class="mb-4"></div>
           <form id="userForm" class="border p-3 d-none" onsubmit="saveUser(event)">
             <h6 class="mb-3">User Form</h6>
-            <input type="hidden" id="userId">
+            <input type="hidden" id="userId" />
             <div class="mb-2">
-              <label class="form-label">Full Name</label>
-              <input type="text" id="userFullName" class="form-control" required>
+              <label for="userFullName" class="form-label">Full Name</label>
+              <input type="text" id="userFullName" class="form-control" required />
             </div>
             <div class="mb-2">
-              <label class="form-label">Email</label>
-              <input type="email" id="userEmail" class="form-control" required>
+              <label for="userEmail" class="form-label">Email</label>
+              <input type="email" id="userEmail" class="form-control" required />
             </div>
             <div class="mb-2">
-              <label class="form-label">Phone</label>
-              <input type="tel" id="userPhone" class="form-control" required>
+              <label for="userPhone" class="form-label">Phone</label>
+              <input type="tel" id="userPhone" class="form-control" required />
             </div>
             <div class="mb-2">
-              <label class="form-label">Role</label>
+              <label for="userRole" class="form-label">Role</label>
               <select id="userRole" class="form-select">
                 <option value="customer">Customer</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
-            <div class="mb-3">
-              <label class="form-label">Password</label>
-              <input type="password" id="userPassword" class="form-control" placeholder="Leave blank to keep current (edit only)">
+            <div class="mb-2">
+              <label for="userPassword" class="form-label">Password</label>
+              <input type="password" id="userPassword" class="form-control" />
             </div>
-            <button type="submit" class="btn btn-success">Save</button>
-            <button type="button" class="btn btn-secondary ms-2" onclick="hideUserForm()">Cancel</button>
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-success">Save User</button>
+              <button type="button" class="btn btn-secondary" onclick="hideUserForm()">Cancel</button>
+            </div>
           </form>
         </div>
-
       </div>
     </div>
   </section>

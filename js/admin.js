@@ -10,25 +10,19 @@ const headers = {
 };
 
 let allOrders = [];
-let currentPage = 1;
-const itemsPerPage = 10;
 
 function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      if (Array.isArray(data)) {
-        document.getElementById('statOrders').textContent = data.length;
-        document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
-      }
+      document.getElementById('statOrders').textContent = data.length;
+      document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
     });
 
   fetch(`${API_URL}/api/products`, { headers })
     .then(r => r.json())
     .then(data => {
-      if (Array.isArray(data)) {
-        document.getElementById('statProducts').textContent = data.length;
-      }
+      document.getElementById('statProducts').textContent = data.length;
     });
 }
 
@@ -37,51 +31,37 @@ function fetchOrders() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      allOrders = Array.isArray(data) ? data : [];
-      currentPage = 1;
-      renderOrderTable();
+      allOrders = data;
+      renderOrderTable(allOrders);
     });
 }
 
-function renderOrderTable() {
+function renderOrderTable(orders) {
   const list = document.getElementById('orderList');
-  const start = (currentPage - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  const paginatedOrders = allOrders.slice(start, end);
-
   list.innerHTML = `
     <table class="table table-bordered">
       <thead><tr><th>ID</th><th>User</th><th>Total</th><th>Status</th><th>Change</th></tr></thead>
       <tbody>
-        ${paginatedOrders.map(o => `
+        ${orders.map(o => `
           <tr>
             <td>${o.id}</td>
-            <td><strong>${o.full_name || '—'}</strong><br/><small>${o.phone || '–'}</small></td>
+            <td>
+              <strong>${o.full_name || '—'}</strong><br/>
+              <small>${o.phone || '–'}</small>
+            </td>
             <td>USD ${parseFloat(o.total).toFixed(2)}</td>
             <td>${o.status}</td>
             <td>
               <button class="btn btn-sm btn-info me-2" onclick="viewOrderDetails(${o.id}, '${o.full_name}', '${o.phone}', '${o.status}', '${o.created_at}', ${o.total})">View</button>
               <select class="form-select mt-1" onchange="updateOrderStatus(${o.id}, this.value)">
                 ${['pending','processing','shipped','delivered'].map(s =>
-                  `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`
-                ).join('')}
+                  `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
               </select>
             </td>
           </tr>
         `).join('')}
       </tbody>
-    </table>
-    <div class="d-flex justify-content-between mt-3">
-      <button class="btn btn-outline-secondary" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(-1)">Previous</button>
-      <span class="align-self-center">Page ${currentPage} of ${Math.ceil(allOrders.length / itemsPerPage)}</span>
-      <button class="btn btn-outline-secondary" ${end >= allOrders.length ? 'disabled' : ''} onclick="changePage(1)">Next</button>
-    </div>
-  `;
-}
-
-function changePage(delta) {
-  currentPage += delta;
-  renderOrderTable();
+    </table>`;
 }
 
 function updateOrderStatus(id, status) {
@@ -419,3 +399,110 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+
+// === USERS ===
+function fetchUsers() {
+  fetch(`${API_URL}/api/admin/users`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      const list = document.getElementById('userList');
+      if (!Array.isArray(data)) {
+        list.innerHTML = '<div class="alert alert-warning">Failed to load users.</div>';
+        return;
+      }
+
+      list.innerHTML = \`
+        <table class="table table-bordered">
+          <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Actions</th></tr></thead>
+          <tbody>
+            \${data.map(u => \`
+              <tr>
+                <td>\${u.full_name}</td>
+                <td>\${u.email}</td>
+                <td>\${u.phone}</td>
+                <td>\${u.role}</td>
+                <td>
+                  <button class="btn btn-sm btn-warning me-1" onclick="editUser(\${u.id})">Edit</button>
+                  <button class="btn btn-sm btn-danger me-1" onclick="deleteUser(\${u.id})">Delete</button>
+                  <button class="btn btn-sm btn-secondary" onclick="resetPassword(\${u.id})">Reset Password</button>
+                </td>
+              </tr>\`).join('')}
+          </tbody>
+        </table>
+      \`;
+    });
+}
+
+function showUserForm(user = {}) {
+  document.getElementById('userForm').classList.remove('d-none');
+  document.getElementById('userId').value = user.id || '';
+  document.getElementById('userFullName').value = user.full_name || '';
+  document.getElementById('userEmail').value = user.email || '';
+  document.getElementById('userPhone').value = user.phone || '';
+  document.getElementById('userRole').value = user.role || 'customer';
+  document.getElementById('userPassword').value = '';
+}
+
+function hideUserForm() {
+  document.getElementById('userForm').reset();
+  document.getElementById('userForm').classList.add('d-none');
+}
+
+function saveUser(e) {
+  e.preventDefault();
+  const id = document.getElementById('userId').value;
+  const body = {
+    full_name: document.getElementById('userFullName').value,
+    email: document.getElementById('userEmail').value,
+    phone: document.getElementById('userPhone').value,
+    role: document.getElementById('userRole').value,
+    password: document.getElementById('userPassword').value
+  };
+
+  const method = id ? 'PUT' : 'POST';
+  const url = id ? \`\${API_URL}/api/admin/users/\${id}\` : \`\${API_URL}/api/admin/users\`;
+  fetch(url, {
+    method,
+    headers,
+    body: JSON.stringify(body)
+  }).then(r => {
+    if (r.ok) {
+      showToast('User saved', 'success');
+      hideUserForm();
+      fetchUsers();
+    } else {
+      showToast('Failed to save user', 'danger');
+    }
+  });
+}
+
+function deleteUser(id) {
+  if (!confirm('Delete this user?')) return;
+  fetch(`${API_URL}/api/admin/users/${id}`, {
+    method: 'DELETE',
+    headers
+  }).then(() => {
+    showToast('User deleted', 'success');
+    fetchUsers();
+  });
+}
+
+function resetPassword(id) {
+  const newPassword = prompt("Enter new password:");
+  if (!newPassword) return;
+  fetch(`${API_URL}/api/admin/users/${id}/reset-password`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ password: newPassword })
+  }).then(r => {
+    if (r.ok) showToast('Password reset', 'success');
+    else showToast('Failed to reset password', 'danger');
+  });
+}
+
+function editUser(id) {
+  fetch(`${API_URL}/api/admin/users/${id}`, { headers })
+    .then(r => r.json())
+    .then(user => showUserForm(user));
+}

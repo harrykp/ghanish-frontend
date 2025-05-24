@@ -1,4 +1,3 @@
-// Replace with your actual backend URL
 const API_URL = 'https://ghanish-backend.onrender.com';
 
 // === Global Toast Helper ===
@@ -58,7 +57,7 @@ window.initGhanishUI = function() {
   updateCartCount();
 
   // === SMOOTH SCROLL + ACTIVE LINK ===
-  const navLinks = document.querySelectorAll('.nav-link[href^=\"#\"], .nav-link[href*=\".html\"]');
+  const navLinks = document.querySelectorAll('.nav-link[href^="#"], .nav-link[href*=".html"]');
   document.addEventListener('scroll', () => {
     const fromTop = window.scrollY + 80;
     navLinks.forEach(link => {
@@ -123,20 +122,29 @@ window.initGhanishUI = function() {
 
   // === LOAD PRODUCTS on STORE PAGE ===
   const productGrid = document.getElementById('productGrid');
+  const categorySelect = document.getElementById('categoryFilter');
+
   if (productGrid) {
-    fetch(`${API_URL}/api/products`)
-      .then(res => res.ok ? res.json() : Promise.reject('Failed to load'))
-      .then(products => {
+    const loadProducts = async (category = '') => {
+      productGrid.innerHTML = '';
+      try {
+        const res = await fetch(`${API_URL}/api/products${category ? `?category=${encodeURIComponent(category)}` : ''}`);
+        const products = await res.json();
+        if (!products.length) {
+          productGrid.innerHTML = '<div class="col-12 text-center"><p>No products found.</p></div>';
+          return;
+        }
+
         products.forEach(product => {
           const col = document.createElement('div');
           col.className = 'col-12 col-md-6 col-lg-4 fade-in';
           col.innerHTML = `
-            <div class="card h-100">
+            <div class="card h-100 shadow-sm">
               ${product.image_url ? `<img src="${product.image_url}" class="card-img-top" alt="${product.name}">` : ''}
               <div class="card-body d-flex flex-column">
                 <h5 class="card-title">${product.name}</h5>
-                <p class="card-text">${product.description}</p>
-                <p class="mt-auto fw-bold">$${parseFloat(product.price).toFixed(2)}</p>
+                <p class="card-text">${product.description || ''}</p>
+                <p class="mt-auto fw-bold">USD ${parseFloat(product.price).toFixed(2)}</p>
                 <button class="btn btn-success mt-2 add-to-cart"
                         data-id="${product.id}"
                         data-name="${product.name}"
@@ -146,15 +154,24 @@ window.initGhanishUI = function() {
           productGrid.appendChild(col);
           setTimeout(() => col.classList.add('visible'), 50);
         });
-      })
-      .catch(err => {
+      } catch (err) {
         console.error(err);
         const errorDiv = document.createElement('div');
         errorDiv.className = 'alert alert-danger';
         errorDiv.textContent = 'Unable to load products at this time.';
         productGrid.parentElement.insertBefore(errorDiv, productGrid);
-      });
+      }
+    };
 
+    // Initial load
+    loadProducts();
+
+    // Filter change
+    categorySelect?.addEventListener('change', () => {
+      loadProducts(categorySelect.value);
+    });
+
+    // Handle Add to Cart
     productGrid.addEventListener('click', e => {
       const btn = e.target.closest('.add-to-cart');
       if (!btn) return;

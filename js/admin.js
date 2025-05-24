@@ -156,6 +156,7 @@ function showProductForm(p = {}) {
   document.getElementById('productDesc').value = p.description || '';
   document.getElementById('productPrice').value = p.price || '';
   document.getElementById('productStock').value = p.stock || '';
+  document.getElementById('productCategory').value = p.category || '';
   document.getElementById('productImage').value = p.image_url || '';
   document.getElementById('productFormTitle').textContent = p.id ? 'Edit Product' : 'New Product';
   updateImagePreview();
@@ -177,6 +178,7 @@ function saveProduct(e) {
     description: document.getElementById('productDesc').value,
     price: document.getElementById('productPrice').value,
     stock: document.getElementById('productStock').value,
+    category: document.getElementById('productCategory').value,
     image_url: document.getElementById('productImage').value
   };
   const method = id ? 'PUT' : 'POST';
@@ -188,6 +190,7 @@ function saveProduct(e) {
       fetchProducts();
     });
 }
+
 
 function deleteProduct(id) {
   if (!confirm('Are you sure?')) return;

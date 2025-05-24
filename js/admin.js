@@ -15,14 +15,17 @@ function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      document.getElementById('statOrders').textContent = data.length;
-      document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
-    });
-
-  fetch(`${API_URL}/api/products`, { headers })
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('statProducts').textContent = data.length;
+      console.log("Stats orders response:", data); // 👈 DEBUG
+      if (Array.isArray(data)) {
+        document.getElementById('statOrders').textContent = data.length;
+        document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
+      } else {
+        document.getElementById('statOrders').textContent = '0';
+        document.getElementById('statPending').textContent = '0';
+      }
+    })
+    .catch(err => {
+      console.error("Failed to load stats:", err);
     });
 }
 
@@ -31,8 +34,12 @@ function fetchOrders() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      allOrders = data;
+      console.log("Orders response:", data); // 👈 DEBUG
+      allOrders = Array.isArray(data) ? data : [];
       renderOrderTable(allOrders);
+    })
+    .catch(err => {
+      console.error("Failed to fetch orders:", err);
     });
 }
 

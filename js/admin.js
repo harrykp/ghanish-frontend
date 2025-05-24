@@ -10,19 +10,25 @@ const headers = {
 };
 
 let allOrders = [];
+let currentPage = 1;
+const itemsPerPage = 10;
 
 function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      document.getElementById('statOrders').textContent = data.length;
-      document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
+      if (Array.isArray(data)) {
+        document.getElementById('statOrders').textContent = data.length;
+        document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
+      }
     });
 
   fetch(`${API_URL}/api/products`, { headers })
     .then(r => r.json())
     .then(data => {
-      document.getElementById('statProducts').textContent = data.length;
+      if (Array.isArray(data)) {
+        document.getElementById('statProducts').textContent = data.length;
+      }
     });
 }
 
@@ -31,37 +37,51 @@ function fetchOrders() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      allOrders = data;
-      renderOrderTable(allOrders);
+      allOrders = Array.isArray(data) ? data : [];
+      currentPage = 1;
+      renderOrderTable();
     });
 }
 
-function renderOrderTable(orders) {
+function renderOrderTable() {
   const list = document.getElementById('orderList');
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const paginatedOrders = allOrders.slice(start, end);
+
   list.innerHTML = `
     <table class="table table-bordered">
       <thead><tr><th>ID</th><th>User</th><th>Total</th><th>Status</th><th>Change</th></tr></thead>
       <tbody>
-        ${orders.map(o => `
+        ${paginatedOrders.map(o => `
           <tr>
             <td>${o.id}</td>
-            <td>
-              <strong>${o.full_name || '—'}</strong><br/>
-              <small>${o.phone || '–'}</small>
-            </td>
+            <td><strong>${o.full_name || '—'}</strong><br/><small>${o.phone || '–'}</small></td>
             <td>USD ${parseFloat(o.total).toFixed(2)}</td>
             <td>${o.status}</td>
             <td>
               <button class="btn btn-sm btn-info me-2" onclick="viewOrderDetails(${o.id}, '${o.full_name}', '${o.phone}', '${o.status}', '${o.created_at}', ${o.total})">View</button>
               <select class="form-select mt-1" onchange="updateOrderStatus(${o.id}, this.value)">
                 ${['pending','processing','shipped','delivered'].map(s =>
-                  `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+                  `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`
+                ).join('')}
               </select>
             </td>
           </tr>
         `).join('')}
       </tbody>
-    </table>`;
+    </table>
+    <div class="d-flex justify-content-between mt-3">
+      <button class="btn btn-outline-secondary" ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(-1)">Previous</button>
+      <span class="align-self-center">Page ${currentPage} of ${Math.ceil(allOrders.length / itemsPerPage)}</span>
+      <button class="btn btn-outline-secondary" ${end >= allOrders.length ? 'disabled' : ''} onclick="changePage(1)">Next</button>
+    </div>
+  `;
+}
+
+function changePage(delta) {
+  currentPage += delta;
+  renderOrderTable();
 }
 
 function updateOrderStatus(id, status) {

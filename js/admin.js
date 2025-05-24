@@ -412,27 +412,28 @@ function fetchUsers() {
         return;
       }
 
-      list.innerHTML = \`
+      list.innerHTML = `
         <table class="table table-bordered">
           <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Actions</th></tr></thead>
           <tbody>
-            \${data.map(u => \`
+            ${data.map(u => `
               <tr>
-                <td>\${u.full_name}</td>
-                <td>\${u.email}</td>
-                <td>\${u.phone}</td>
-                <td>\${u.role}</td>
+                <td>${u.full_name}</td>
+                <td>${u.email}</td>
+                <td>${u.phone}</td>
+                <td>${u.role}</td>
                 <td>
-                  <button class="btn btn-sm btn-warning me-1" onclick="editUser(\${u.id})">Edit</button>
-                  <button class="btn btn-sm btn-danger me-1" onclick="deleteUser(\${u.id})">Delete</button>
-                  <button class="btn btn-sm btn-secondary" onclick="resetPassword(\${u.id})">Reset Password</button>
+                  <button class="btn btn-sm btn-warning me-1" onclick="editUser(${u.id})">Edit</button>
+                  <button class="btn btn-sm btn-danger me-1" onclick="deleteUser(${u.id})">Delete</button>
+                  <button class="btn btn-sm btn-secondary" onclick="resetPassword(${u.id})">Reset Password</button>
                 </td>
-              </tr>\`).join('')}
+              </tr>`).join('')}
           </tbody>
         </table>
-      \`;
+      `;
     });
 }
+
 
 function showUserForm(user = {}) {
   document.getElementById('userForm').classList.remove('d-none');

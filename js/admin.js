@@ -15,36 +15,24 @@ function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      console.log('Stats orders response:', data);
-      if (Array.isArray(data)) {
-        document.getElementById('statOrders').textContent = data.length;
-        document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
-      }
+      document.getElementById('statOrders').textContent = data.length;
+      document.getElementById('statPending').textContent = data.filter(o => o.status === 'pending').length;
     });
 
-  // ✅ Add this missing block
   fetch(`${API_URL}/api/products`, { headers })
     .then(r => r.json())
     .then(data => {
-      console.log('Stats products response:', data);
-      if (Array.isArray(data)) {
-        document.getElementById('statProducts').textContent = data.length;
-      }
+      document.getElementById('statProducts').textContent = data.length;
     });
 }
-
 
 // === ORDERS ===
 function fetchOrders() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
     .then(data => {
-      console.log("Orders response:", data); // 👈 DEBUG
-      allOrders = Array.isArray(data) ? data : [];
+      allOrders = data;
       renderOrderTable(allOrders);
-    })
-    .catch(err => {
-      console.error("Failed to fetch orders:", err);
     });
 }
 

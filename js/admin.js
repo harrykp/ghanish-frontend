@@ -191,7 +191,6 @@ function saveProduct(e) {
     });
 }
 
-
 function deleteProduct(id) {
   if (!confirm('Are you sure?')) return;
   fetch(`${API_URL}/api/products/${id}`, { method: 'DELETE', headers })
@@ -249,7 +248,7 @@ function viewOrderDetails(orderId, full_name, phone, status, createdAt, total) {
   new bootstrap.Modal(document.getElementById('orderModal')).show();
 }
 
-// === Revenue Analytics Chart ===
+// === Revenue Analytics + Top Products Charts ===
 function fetchRevenueAnalytics() {
   fetch(`${API_URL}/api/admin/revenue`, { headers })
     .then(r => r.json())
@@ -269,15 +268,35 @@ function fetchRevenueAnalytics() {
         options: {
           responsive: true,
           scales: {
-            y: {
-              beginAtZero: true
-            }
+            y: { beginAtZero: true }
           }
         }
       });
-    })
-    .catch(err => {
-      console.error('Failed to load revenue analytics', err);
+    });
+
+  // === Top Selling Products Chart ===
+  fetch(`${API_URL}/api/admin/analytics`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      const ctx = document.getElementById('topProductsChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: data.topProducts.labels,
+          datasets: [{
+            data: data.topProducts.values,
+            backgroundColor: [
+              '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
     });
 }
 

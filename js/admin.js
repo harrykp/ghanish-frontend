@@ -1,147 +1,154 @@
-// === Admin Dashboard Script ===
-const token = localStorage.getItem('token');
-if (!token) {
-  alert("Unauthorized");
-  location.href = "login.html";
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard – Ghanish</title>
+  <link rel="icon" href="images/ghanish-logo.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="nav-placeholder"></div>
 
-const headers = {
-  'Authorization': `Bearer ${token}`,
-  'Content-Type': 'application/json'
-};
+  <section class="py-5">
+    <div class="container">
+      <h2 class="mb-4 text-center">Admin Dashboard</h2>
 
-let allOrders = [];
-let currentOrderPage = 1;
-const ordersPerPage = 10;
+      <!-- Stats -->
+      <div class="row text-center mb-4" id="adminStats">
+        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h5>Total Orders</h5><div id="statOrders" class="fs-4">–</div></div></div></div>
+        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h5>Pending Orders</h5><div id="statPending" class="fs-4">–</div></div></div></div>
+        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h5>Total Products</h5><div id="statProducts" class="fs-4">–</div></div></div></div>
+      </div>
 
-function loadStats() {
-  fetch(`${API_URL}/api/orders/all`, { headers })
-    .then(r => r.json())
-    .then(data => {
-      const orders = data.orders || [];
-      document.getElementById('statOrders').textContent = orders.length;
-      document.getElementById('statPending').textContent = orders.filter(o => o.status === 'pending').length;
-    });
+      <!-- Tabs -->
+      <ul class="nav nav-tabs" id="adminTabs">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#orders">Orders</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#products">Products</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#analytics">Analytics</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#discounts">Discounts</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#users">Users</a></li>
+      </ul>
 
-  fetch(`${API_URL}/api/products`, { headers })
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('statProducts').textContent = data.length;
-    });
-}
+      <div class="tab-content mt-4">
+        <div class="tab-pane fade show active" id="orders">
+          <div class="d-flex justify-content-between mb-3">
+            <input type="text" class="form-control me-3" id="orderFilterInput" placeholder="Filter by status or name" style="max-width: 300px;">
+            <div>
+              <button class="btn btn-outline-secondary me-2" id="exportCsvBtn">Export CSV</button>
+              <button class="btn btn-outline-primary" id="printBtn">Print</button>
+            </div>
+          </div>
+          <div id="orderList"></div>
+        </div>
 
-function fetchOrders(page = 1) {
-  currentOrderPage = page;
-  fetch(`${API_URL}/api/orders/all?page=${page}&limit=${ordersPerPage}`, { headers })
-    .then(r => r.json())
-    .then(data => {
-      allOrders = data.orders || [];
-      renderOrderTable(allOrders, page, data.total);
-    });
-}
-
-function renderOrderTable(orders, currentPage, totalOrders) {
-  const list = document.getElementById('orderList');
-  list.innerHTML = `
-    <table class="table table-bordered">
-      <thead><tr><th>ID</th><th>User</th><th>Total</th><th>Status</th><th>Change</th></tr></thead>
-      <tbody>
-        ${orders.map(o => `
-          <tr>
-            <td>${o.id}</td>
-            <td><strong>${o.full_name || '—'}</strong><br/><small>${o.phone || '–'}</small></td>
-            <td>USD ${parseFloat(o.total).toFixed(2)}</td>
-            <td>${o.status}</td>
-            <td>
-              <button class="btn btn-sm btn-info me-2" onclick="viewOrderDetails(${o.id}, '${o.full_name}', '${o.phone}', '${o.status}', '${o.created_at}', ${o.total})">View</button>
-              <select class="form-select mt-1" onchange="updateOrderStatus(${o.id}, this.value)">
-                ${['pending','processing','shipped','delivered'].map(s =>
-                  `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+        <div class="tab-pane fade" id="products">
+          <div class="d-flex justify-content-between mb-3">
+            <h5>Manage Products</h5>
+            <button class="btn btn-primary" id="showProductFormBtn">+ New Product</button>
+          </div>
+          <div id="productList" class="mb-4"></div>
+          <form id="productForm" class="border p-3 d-none">
+            <h6 id="productFormTitle">New Product</h6>
+            <input type="hidden" id="productId">
+            <div class="mb-2"><label class="form-label">Name</label><input type="text" class="form-control" id="productName" required></div>
+            <div class="mb-2"><label class="form-label">Description</label><textarea class="form-control" id="productDesc"></textarea></div>
+            <div class="mb-2"><label class="form-label">Price</label><input type="number" class="form-control" id="productPrice" required></div>
+            <div class="mb-2"><label class="form-label">Stock</label><input type="number" class="form-control" id="productStock" required></div>
+            <div class="mb-2"><label class="form-label">Category</label>
+              <select class="form-select" id="productCategory" required>
+                <option value="">Select</option>
+                <option value="Shrimp">Shrimp</option>
+                <option value="Fish">Fish</option>
+                <option value="Seasoning">Seasoning</option>
               </select>
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-    <div class="d-flex justify-content-between mt-3">
-      <button class="btn btn-outline-secondary" ${currentPage === 1 ? 'disabled' : ''} onclick="fetchOrders(${currentPage - 1})">Previous</button>
-      <span class="align-self-center">Page ${currentPage} of ${Math.ceil(totalOrders / ordersPerPage)}</span>
-      <button class="btn btn-outline-secondary" ${currentPage * ordersPerPage >= totalOrders ? 'disabled' : ''} onclick="fetchOrders(${currentPage + 1})">Next</button>
-    </div>`;
-}
+            </div>
+            <div class="mb-3"><label class="form-label">Image URL</label><input type="url" class="form-control" id="productImage"></div>
+            <div class="mb-3"><img id="imagePreview" class="img-fluid d-none border" style="max-height: 200px;" /></div>
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-success">Save</button>
+              <button type="button" class="btn btn-secondary" id="cancelProductBtn">Cancel</button>
+            </div>
+          </form>
+        </div>
 
-function updateOrderStatus(id, status) {
-  fetch(`${API_URL}/api/orders/${id}/status`, {
-    method: 'PUT',
-    headers,
-    body: JSON.stringify({ status })
-  }).then(() => {
-    showToast('Status updated', 'success');
-    fetchOrders(currentOrderPage);
-  });
-}
+        <div class="tab-pane fade" id="analytics">
+          <h5 class="mb-3">Monthly Revenue</h5>
+          <canvas id="revenueChart" height="100"></canvas>
+          <hr class="my-4" />
+          <h5 class="mb-3">Top Selling Products</h5>
+          <canvas id="topProductsChart" height="100"></canvas>
+        </div>
 
-function exportOrdersToCSV() {
-  const rows = [
-    ['Order ID', 'Name', 'Phone', 'Total', 'Status', 'Created At'],
-    ...allOrders.map(o => [
-      o.id, o.full_name || '-', o.phone || '-', o.total, o.status, o.created_at
-    ])
-  ];
-  const csv = rows.map(r => r.map(x => `"${x}"`).join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `orders-${Date.now()}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
+        <div class="tab-pane fade" id="discounts">
+          <div class="d-flex justify-content-between mb-3">
+            <h5>Manage Discount Codes</h5>
+            <button class="btn btn-success" id="showDiscountFormBtn">+ New Code</button>
+          </div>
+          <div id="discountList"></div>
+          <form id="discountForm" class="border p-3 d-none">
+            <h6>New Discount Code</h6>
+            <div class="mb-2"><label class="form-label">Code</label><input type="text" class="form-control" id="discountCode" required></div>
+            <div class="mb-2"><label class="form-label">% Off</label><input type="number" class="form-control" id="discountPercent" min="1" max="100" required></div>
+            <div class="mb-3"><label class="form-label">Expires At</label><input type="datetime-local" class="form-control" id="discountExpires"></div>
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary ms-2" id="cancelDiscountBtn">Cancel</button>
+          </form>
+        </div>
 
-function printOrderModal() {
-  const modalContent = document.querySelector('#orderModal .modal-content').innerHTML;
-  const win = window.open('', '_blank', 'width=800,height=600');
-  win.document.write(`
-    <html><head><title>Print Order</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    </head><body>${modalContent}</body></html>
-  `);
-  win.document.close();
-  win.focus();
-  setTimeout(() => {
-    win.print();
-    win.close();
-  }, 500);
-}
+        <div class="tab-pane fade" id="users">
+          <div class="d-flex justify-content-between mb-3">
+            <h5>Manage Users</h5>
+            <button class="btn btn-primary" id="showUserFormBtn">+ New User</button>
+          </div>
+          <div id="userList"></div>
+          <form id="userForm" class="border p-3 d-none">
+            <h6>New/Edit User</h6>
+            <input type="hidden" id="userId">
+            <div class="mb-2"><label class="form-label">Full Name</label><input type="text" class="form-control" id="userFullName" required></div>
+            <div class="mb-2"><label class="form-label">Email</label><input type="email" class="form-control" id="userEmail" required></div>
+            <div class="mb-2"><label class="form-label">Phone</label><input type="tel" class="form-control" id="userPhone" required></div>
+            <div class="mb-2"><label class="form-label">Role</label>
+              <select class="form-select" id="userRole" required>
+                <option value="customer">Customer</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+            <div class="mb-3"><label class="form-label">Password</label><input type="password" class="form-control" id="userPassword"></div>
+            <button type="submit" class="btn btn-success">Save</button>
+            <button type="button" class="btn btn-secondary ms-2" id="cancelUserBtn">Cancel</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
 
-// Define fetchRevenueAnalytics, showProductForm, editUser, resetPassword, deleteUser, showDiscountForm
-// These must be attached to window to ensure global accessibility
-window.fetchRevenueAnalytics = function () { /* previously defined logic */ };
-window.showProductForm = function (p = {}) { /* existing logic */ };
-window.editUser = function (id) { /* existing logic */ };
-window.resetPassword = function (id) { /* existing logic */ };
-window.deleteUser = function (id) { /* existing logic */ };
-window.showDiscountForm = function () { document.getElementById('discountForm').classList.remove('d-none'); };
-window.viewOrderDetails = function () { /* existing logic */ };
+  <div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Order Details</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <p><strong>Customer:</strong> <span id="modalCustomerName"></span></p>
+          <p><strong>Phone:</strong> <span id="modalCustomerPhone"></span></p>
+          <p><strong>Status:</strong> <span id="modalOrderStatus"></span></p>
+          <p><strong>Date:</strong> <span id="modalOrderDate"></span></p>
+          <p><a href="profile.html" id="modalViewProfileLink" target="_blank">View Full Profile</a></p>
+          <table class="table table-sm table-bordered mt-3">
+            <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
+            <tbody id="modalItemsBody"></tbody>
+          </table>
+          <h5 class="text-end">Total: <span id="modalOrderTotal"></span></h5>
+        </div>
+      </div>
+    </div>
+  </div>
 
-document.addEventListener('DOMContentLoaded', () => {
-  const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
-  if (tabButtons.length) {
-    const tabTrigger = new bootstrap.Tab(tabButtons[0]);
-    tabTrigger.show();
-    tabButtons.forEach(btn => {
-      btn.addEventListener('shown.bs.tab', e => {
-        const target = e.target.getAttribute('href');
-        if (target === '#orders') fetchOrders();
-        if (target === '#products') fetchProducts();
-        if (target === '#analytics') fetchRevenueAnalytics();
-        if (target === '#discounts') fetchDiscountCodes();
-        if (target === '#users') fetchUsers();
-      });
-    });
-    fetchOrders();
-    loadStats();
-  }
-});
+  <div id="footer-placeholder"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/includes.js"></script>
+  <script type="module" src="js/admin/init.js"></script>
+</body>
+</html>

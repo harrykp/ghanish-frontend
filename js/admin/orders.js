@@ -1,159 +1,158 @@
-// routes/orders.js
-const express = require('express');
-const db = require('../db');
-const auth = require('../middleware/auth');
-const adminOnly = require('../middleware/adminOnly');
-const router = express.Router();
+// js/admin/orders.js
+import { showToast } from './utils.js';
 
-// All routes below require a valid JWT
-router.use(auth);
+const token = localStorage.getItem('token');
+const headers = {
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json'
+};
 
-/**
- * POST /api/orders
- * body: { items: [{ product_id, quantity }] }
- */
-router.post('/', async (req, res, next) => {
-  const userId = req.user.id;
-  const { items } = req.body;
+let allOrders = [];
+let currentOrderPage = 1;
+const ordersPerPage = 10;
 
-  if (!Array.isArray(items) || items.length === 0) {
-    return res.status(400).json({ error: 'Items array is required.' });
-  }
+export function fetchOrders(page = 1) {
+  currentOrderPage = page;
+  fetch(`${API_URL}/api/orders/all?page=${page}&limit=${ordersPerPage}`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      allOrders = data.orders || [];
+      renderOrderTable(allOrders, page, data.total);
+    });
+}
 
-  try {
-    const productIds = items.map(i => i.product_id);
-    const placeholders = productIds.map((_, i) => `$${i + 1}`).join(',');
-    const productsRes = await db.query(
-      `SELECT id, price FROM products WHERE id IN (${placeholders})`,
-      productIds
-    );
-    const productsMap = new Map(productsRes.rows.map(p => [p.id, p.price]));
+export function renderOrderTable(orders, currentPage, totalOrders) {
+  const list = document.getElementById('orderList');
+  list.innerHTML = `
+    <table class="table table-bordered">
+      <thead><tr><th>ID</th><th>User</th><th>Total</th><th>Status</th><th>Change</th></tr></thead>
+      <tbody>
+        ${orders.map(o => `
+          <tr>
+            <td>${o.id}</td>
+            <td><strong>${o.full_name || '—'}</strong><br/><small>${o.phone || '–'}</small></td>
+            <td>USD ${parseFloat(o.total).toFixed(2)}</td>
+            <td>${o.status}</td>
+            <td>
+              <button class="btn btn-sm btn-info me-2 view-order-btn" data-id="${o.id}" data-name="${o.full_name}" data-phone="${o.phone}" data-status="${o.status}" data-date="${o.created_at}" data-total="${o.total}">View</button>
+              <select class="form-select form-select-sm status-select" data-id="${o.id}">
+                ${['pending','processing','shipped','delivered'].map(s =>
+                  `<option value="${s}" ${s === o.status ? 'selected' : ''}>${s}</option>`).join('')}
+              </select>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+    <div class="d-flex justify-content-between mt-3">
+      <button class="btn btn-outline-secondary" ${currentPage === 1 ? 'disabled' : ''} data-page="${currentPage - 1}" id="ordersPrevBtn">Previous</button>
+      <span class="align-self-center">Page ${currentPage} of ${Math.ceil(totalOrders / ordersPerPage)}</span>
+      <button class="btn btn-outline-secondary" ${currentPage * ordersPerPage >= totalOrders ? 'disabled' : ''} data-page="${currentPage + 1}" id="ordersNextBtn">Next</button>
+    </div>
+  `;
 
-    let total = 0;
-    const orderItemsData = items.map(({ product_id, quantity }) => {
-      const unit_price = productsMap.get(product_id);
-      if (unit_price == null) {
-        throw new Error(`Product ${product_id} not found`);
+  document.getElementById('ordersPrevBtn')?.addEventListener('click', e => {
+    fetchOrders(+e.target.dataset.page);
+  });
+  document.getElementById('ordersNextBtn')?.addEventListener('click', e => {
+    fetchOrders(+e.target.dataset.page);
+  });
+
+  document.querySelectorAll('.status-select').forEach(select => {
+    select.addEventListener('change', e => {
+      updateOrderStatus(e.target.dataset.id, e.target.value);
+    });
+  });
+
+  document.querySelectorAll('.view-order-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const name = btn.dataset.name;
+      const phone = btn.dataset.phone;
+      const status = btn.dataset.status;
+      const date = btn.dataset.date;
+      const total = btn.dataset.total;
+      viewOrderDetails(id, name, phone, status, date, total);
+    });
+  });
+}
+
+export function updateOrderStatus(id, status) {
+  fetch(`${API_URL}/api/orders/${id}/status`, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify({ status })
+  }).then(() => {
+    showToast('Status updated', 'success');
+    fetchOrders(currentOrderPage);
+  });
+}
+
+export function exportOrdersToCSV() {
+  const rows = [
+    ['Order ID', 'Name', 'Phone', 'Total', 'Status', 'Created At'],
+    ...allOrders.map(o => [
+      o.id, o.full_name || '-', o.phone || '-', o.total, o.status, o.created_at
+    ])
+  ];
+  const csv = rows.map(r => r.map(x => `"${x}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `orders-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export function printOrderModal() {
+  const modalContent = document.querySelector('#orderModal .modal-content').innerHTML;
+  const win = window.open('', '_blank', 'width=800,height=600');
+  win.document.write(`
+    <html><head><title>Print Order</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    </head><body>${modalContent}</body></html>
+  `);
+  win.document.close();
+  win.focus();
+  setTimeout(() => {
+    win.print();
+    win.close();
+  }, 500);
+}
+
+function viewOrderDetails(id, full_name, phone, status, createdAt, total) {
+  document.getElementById('modalCustomerName').textContent = full_name || '–';
+  document.getElementById('modalCustomerPhone').textContent = phone || '–';
+  document.getElementById('modalOrderStatus').textContent = status;
+  document.getElementById('modalOrderDate').textContent = new Date(createdAt).toLocaleString();
+  document.getElementById('modalOrderTotal').textContent = `USD ${parseFloat(total).toFixed(2)}`;
+  document.getElementById('modalViewProfileLink').href = `profile.html?user=${encodeURIComponent(full_name)}`;
+
+  const body = document.getElementById('modalItemsBody');
+  body.innerHTML = '<tr><td colspan="4">Loading...</td></tr>';
+
+  fetch(`${API_URL}/api/orders/${id}/admin`, { headers })
+    .then(r => r.json())
+    .then(order => {
+      if (!order.items || !order.items.length) {
+        body.innerHTML = '<tr><td colspan="4">No items found</td></tr>';
+        return;
       }
-      const subtotal = parseFloat(unit_price) * quantity;
-      total += subtotal;
-      return { product_id, quantity, unit_price, subtotal };
+      body.innerHTML = order.items.map(item => `
+        <tr>
+          <td>${item.product_name}</td>
+          <td>${item.quantity}</td>
+          <td>USD ${parseFloat(item.unit_price).toFixed(2)}</td>
+          <td>USD ${parseFloat(item.subtotal).toFixed(2)}</td>
+        </tr>
+      `).join('');
+    })
+    .catch(() => {
+      body.innerHTML = '<tr><td colspan="4">Failed to load items</td></tr>';
     });
 
-    const orderRes = await db.query(
-      `INSERT INTO orders (user_id, total) VALUES ($1, $2) RETURNING id, created_at`,
-      [userId, total.toFixed(2)]
-    );
-    const orderId = orderRes.rows[0].id;
-
-    await Promise.all(
-      orderItemsData.map(item =>
-        db.query(
-          `INSERT INTO order_items (order_id, product_id, quantity, unit_price, subtotal)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [
-            orderId,
-            item.product_id,
-            item.quantity,
-            item.unit_price,
-            item.subtotal.toFixed(2)
-          ]
-        )
-      )
-    );
-
-    res.status(201).json({ orderId, total: total.toFixed(2), status: 'pending' });
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * GET /api/orders — user’s own orders
- */
-router.get('/', async (req, res, next) => {
-  const userId = req.user.id;
-  try {
-    const ordersRes = await db.query(
-      `SELECT id, total, status, created_at
-       FROM orders
-       WHERE user_id = $1
-       ORDER BY created_at DESC`,
-      [userId]
-    );
-    res.json(ordersRes.rows);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * GET /api/orders/all — admin: get all orders (with user full name & phone)
- */
-router.get('/all', adminOnly, async (req, res, next) => {
-  try {
-    const result = await db.query(`
-      SELECT o.id, o.total, o.status, o.created_at,
-             u.full_name AS full_name,
-             u.phone AS phone
-      FROM orders o
-      JOIN users u ON u.id = o.user_id
-      ORDER BY o.created_at DESC
-    `);
-    res.json(result.rows);
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * PUT /api/orders/:id/status — admin: update status
- */
-router.put('/:id/status', adminOnly, async (req, res, next) => {
-  const { status } = req.body;
-  try {
-    await db.query('UPDATE orders SET status=$1 WHERE id=$2', [status, req.params.id]);
-    res.json({ message: 'Status updated' });
-  } catch (err) {
-    next(err);
-  }
-});
-
-/**
- * GET /api/orders/:id — user: get specific order
- */
-router.get('/:id', async (req, res, next) => {
-  const userId = req.user.id;
-  const orderId = req.params.id;
-  try {
-    const orderRes = await db.query(
-      `SELECT id, total, status, created_at
-       FROM orders
-       WHERE id = $1 AND user_id = $2`,
-      [orderId, userId]
-    );
-    if (orderRes.rows.length === 0) {
-      return res.status(404).json({ error: 'Order not found.' });
-    }
-    const order = orderRes.rows[0];
-
-    const itemsRes = await db.query(
-      `SELECT oi.id,
-              oi.product_id,
-              p.name AS product_name,
-              oi.quantity,
-              oi.unit_price,
-              oi.subtotal
-       FROM order_items oi
-       JOIN products p ON p.id = oi.product_id
-       WHERE oi.order_id = $1`,
-      [orderId]
-    );
-
-    res.json({ ...order, items: itemsRes.rows });
-  } catch (err) {
-    next(err);
-  }
-});
-
-module.exports = router;
+  new bootstrap.Modal(document.getElementById('orderModal')).show();
+}

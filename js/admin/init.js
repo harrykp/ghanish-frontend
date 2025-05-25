@@ -1,19 +1,15 @@
-// js/admin/init.js
 import { fetchOrders, exportOrdersToCSV, printOrderModal } from './orders.js';
-import { fetchProducts, showProductForm, hideProductForm, saveProduct } from './products.js';
-import { fetchRevenueAnalytics } from './analytics.js';
-import { fetchDiscountCodes, showDiscountForm } from './discounts.js';
-import { fetchUsers, showUserForm, deleteUser, resetPassword, saveUser, editUser } from './users.js';
-import { loadStats } from './dashboard.js';
+import { fetchProducts, showProductForm, hideProductForm, saveProduct, deleteProduct } from './products.js';
+import { fetchUsers, editUser, deleteUser, resetPassword } from './users.js';
+import { fetchDiscountCodes, showDiscountForm, saveDiscountCode } from './discounts.js';
+import { fetchRevenueAnalytics, fetchTopProductsAnalytics } from './analytics.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Tab links event listener to switch between tabs
   const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
   if (tabButtons.length) {
-    const tabTrigger = new bootstrap.Tab(tabButtons[0]);
-    tabTrigger.show();
-
     tabButtons.forEach(btn => {
-      btn.addEventListener('shown.bs.tab', e => {
+      btn.addEventListener('click', e => {
         const target = e.target.getAttribute('href');
         if (target === '#orders') fetchOrders();
         if (target === '#products') fetchProducts();
@@ -22,28 +18,43 @@ document.addEventListener('DOMContentLoaded', () => {
         if (target === '#users') fetchUsers();
       });
     });
-
-    // Initial load
-    fetchOrders();
-    loadStats();
   }
 
-  // Global action bindings
-  document.getElementById('exportOrdersBtn')?.addEventListener('click', exportOrdersToCSV);
-  document.getElementById('printOrdersBtn')?.addEventListener('click', printOrderModal);
+  // Order Buttons
+  const exportCSVBtn = document.getElementById('exportCSVBtn');
+  const printOrdersBtn = document.getElementById('printOrdersBtn');
+  exportCSVBtn.addEventListener('click', exportOrdersToCSV);
+  printOrdersBtn.addEventListener('click', printOrderModal);
 
-  document.getElementById('newProductBtn')?.addEventListener('click', () => showProductForm());
-  document.getElementById('cancelProductBtn')?.addEventListener('click', hideProductForm);
-  document.getElementById('productForm')?.addEventListener('submit', saveProduct);
+  // Product Buttons
+  const addProductBtn = document.getElementById('addProductBtn');
+  addProductBtn.addEventListener('click', showProductForm);
 
-  document.getElementById('newDiscountBtn')?.addEventListener('click', () => showDiscountForm());
+  // Cancel Product Form Button
+  const cancelProductBtn = document.getElementById('cancelProductBtn');
+  cancelProductBtn.addEventListener('click', hideProductForm);
 
-  document.getElementById('newUserBtn')?.addEventListener('click', () => showUserForm());
-  document.getElementById('cancelUserBtn')?.addEventListener('click', () => document.getElementById('userForm').classList.add('d-none'));
-  document.getElementById('userForm')?.addEventListener('submit', saveUser);
+  // User Buttons
+  const addUserBtn = document.getElementById('addUserBtn');
+  addUserBtn.addEventListener('click', () => showUserForm());
+  
+  // Discount Buttons
+  const addDiscountBtn = document.getElementById('addDiscountBtn');
+  addDiscountBtn.addEventListener('click', showDiscountForm);
 
-  // Expose user actions globally for onclick attributes (temporary fallback)
-  window.editUser = editUser;
-  window.deleteUser = deleteUser;
-  window.resetPassword = resetPassword;
+  // Handle form submission events (Product, User, Discount)
+  const productForm = document.getElementById('productForm');
+  if (productForm) {
+    productForm.addEventListener('submit', saveProduct);
+  }
+
+  const userForm = document.getElementById('userForm');
+  if (userForm) {
+    userForm.addEventListener('submit', saveUser);
+  }
+
+  const discountForm = document.getElementById('discountForm');
+  if (discountForm) {
+    discountForm.addEventListener('submit', saveDiscountCode);
+  }
 });

@@ -7,6 +7,7 @@
   <link rel="icon" href="images/ghanish-logo.png">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="css/styles.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <div id="nav-placeholder"></div>
@@ -37,21 +38,18 @@
           <div class="d-flex justify-content-between align-items-center mb-3">
             <input type="text" class="form-control me-3" style="max-width: 300px;" placeholder="Filter by status..." id="orderFilterInput">
             <div>
-              <button class="btn btn-outline-secondary me-2" id="btnExportCSV">Export CSV</button>
-              <button class="btn btn-outline-primary" id="btnPrintOrder">Print</button>
+              <button class="btn btn-outline-secondary me-2" id="exportCSVBtn">Export CSV</button>
+              <button class="btn btn-outline-primary" id="printOrderBtn">Print</button>
             </div>
           </div>
           <div id="orderList"></div>
-          <nav class="mt-3">
-            <ul class="pagination justify-content-center" id="paginationControls"></ul>
-          </nav>
         </div>
 
         <!-- Products Tab -->
         <div class="tab-pane fade" id="products">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">Manage Products</h5>
-            <button class="btn btn-primary" id="btnShowProductForm">+ New Product</button>
+            <button class="btn btn-primary" id="addProductBtn">+ New Product</button>
           </div>
           <div id="productList" class="mb-4"></div>
           <form id="productForm" class="border p-3 d-none">
@@ -88,8 +86,8 @@
               <div class="mt-2"><img id="imagePreview" src="" alt="" class="img-fluid border d-none" style="max-height: 200px;" /></div>
             </div>
             <div class="d-flex justify-content-between">
-              <button type="submit" class="btn btn-success" id="btnSaveProduct">Save Product</button>
-              <button type="button" class="btn btn-secondary" id="btnCancelProduct">Cancel</button>
+              <button type="submit" class="btn btn-success" id="saveProductBtn">Save Product</button>
+              <button type="button" class="btn btn-secondary" id="cancelProductBtn">Cancel</button>
             </div>
           </form>
         </div>
@@ -107,7 +105,7 @@
         <div class="tab-pane fade" id="discounts">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">Manage Discount Codes</h5>
-            <button class="btn btn-success" id="btnShowDiscountForm">+ New Code</button>
+            <button class="btn btn-success" id="addDiscountBtn">+ New Code</button>
           </div>
           <div id="discountList" class="mb-3"></div>
 
@@ -125,8 +123,10 @@
               <label for="discountExpires" class="form-label">Expires At</label>
               <input type="datetime-local" id="discountExpires" class="form-control">
             </div>
-            <button type="submit" class="btn btn-success" id="btnSaveDiscount">Save</button>
-            <button type="button" class="btn btn-secondary ms-2" id="btnCancelDiscount">Cancel</button>
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-success" id="saveDiscountBtn">Save</button>
+              <button type="button" class="btn btn-secondary" id="cancelDiscountBtn">Cancel</button>
+            </div>
           </form>
         </div>
 
@@ -134,37 +134,39 @@
         <div class="tab-pane fade" id="users">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="mb-0">Manage Users</h5>
-            <button class="btn btn-primary" id="btnShowUserForm">+ New User</button>
+            <button class="btn btn-primary" id="addUserBtn">+ New User</button>
           </div>
-          <div id="userList"></div>
+          <div id="userList" class="mb-3"></div>
           <form id="userForm" class="border p-3 d-none">
-            <h6 class="mb-3">User Info</h6>
-            <input type="hidden" id="userId" />
+            <h6 class="mb-3">User Details</h6>
+            <input type="hidden" id="userId">
             <div class="mb-2">
               <label for="userFullName" class="form-label">Full Name</label>
-              <input type="text" id="userFullName" class="form-control" required />
+              <input type="text" id="userFullName" class="form-control" required>
             </div>
             <div class="mb-2">
               <label for="userEmail" class="form-label">Email</label>
-              <input type="email" id="userEmail" class="form-control" required />
+              <input type="email" id="userEmail" class="form-control" required>
             </div>
             <div class="mb-2">
               <label for="userPhone" class="form-label">Phone</label>
-              <input type="tel" id="userPhone" class="form-control" required />
+              <input type="tel" id="userPhone" class="form-control" required>
             </div>
             <div class="mb-2">
               <label for="userRole" class="form-label">Role</label>
-              <select id="userRole" class="form-select" required>
+              <select id="userRole" class="form-select">
                 <option value="customer">Customer</option>
                 <option value="admin">Admin</option>
               </select>
             </div>
             <div class="mb-3">
-              <label for="userPassword" class="form-label">Password</label>
-              <input type="password" id="userPassword" class="form-control" />
+              <label for="userPassword" class="form-label">Password (only if setting/changing)</label>
+              <input type="password" id="userPassword" class="form-control">
             </div>
-            <button type="submit" class="btn btn-success" id="btnSaveUser">Save</button>
-            <button type="button" class="btn btn-secondary ms-2" id="btnCancelUser">Cancel</button>
+            <div class="d-flex justify-content-between">
+              <button type="submit" class="btn btn-success" id="saveUserBtn">Save</button>
+              <button type="button" class="btn btn-secondary" id="cancelUserBtn">Cancel</button>
+            </div>
           </form>
         </div>
       </div>
@@ -194,8 +196,10 @@
 
   <div id="footer-placeholder"></div>
 
-  <!-- Scripts -->
+  <!-- JS Dependencies -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/includes.js"></script>
+  <script src="js/scripts.js"></script>
   <script type="module" src="js/admin/init.js"></script>
 </body>
 </html>

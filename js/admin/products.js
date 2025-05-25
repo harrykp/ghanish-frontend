@@ -1,88 +1,112 @@
-// routes/products.js
-const express = require('express');
-const db = require('../db');
-const router = express.Router();
+// js/admin/products.js
+import { showToast } from './utils.js';
 
-// GET /api/products — list all products
-router.get('/', async (req, res, next) => {
-  try {
-    const result = await db.query('SELECT * FROM products ORDER BY created_at DESC');
-    res.json(result.rows);
-  } catch (err) {
-    next(err);
-  }
-});
+const API_URL = window.API_URL;
+const token = localStorage.getItem('token');
+const headers = {
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json'
+};
 
-// GET /api/products/:id — get single product
-router.get('/:id', async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const result = await db.query('SELECT * FROM products WHERE id = $1', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    next(err);
-  }
-});
+export function fetchProducts() {
+  fetch(`${API_URL}/api/products`, { headers })
+    .then(r => r.json())
+    .then(data => {
+      const list = document.getElementById('productList');
+      list.innerHTML = `
+        <table class="table table-bordered">
+          <thead><tr><th>Name</th><th>Price</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${data.map(p => `
+              <tr>
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    ${p.image_url ? `<img src="${p.image_url}" alt="" style="height:40px;">` : ''}
+                    <span>${p.name}</span>
+                  </div>
+                </td>
+                <td>USD ${parseFloat(p.price).toFixed(2)}</td>
+                <td>
+                  <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
+                  <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
+                </td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
 
-// POST /api/products — create a new product
-router.post('/', async (req, res, next) => {
-  const { name, description, price, image_url, stock } = req.body;
-  if (!name || !description || price == null || stock == null) {
-    return res.status(400).json({ error: 'Name, description, price, and stock are required.' });
-  }
-  try {
-    const queryText = `
-      INSERT INTO products (name, description, price, image_url, stock, created_at)
-      VALUES ($1, $2, $3, $4, $5, NOW())
-      RETURNING *;
-    `;
-    const result = await db.query(queryText, [name, description, price, image_url || null, stock]);
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    next(err);
-  }
-});
+      // Re-bind edit buttons
+      document.querySelectorAll('.edit-product-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          try {
+            const data = JSON.parse(btn.dataset.product);
+            showProductForm(data);
+          } catch {
+            showToast('Failed to parse product data', 'danger');
+          }
+        });
+      });
+    });
+}
 
-// PUT /api/products/:id — update a product
-router.put('/:id', async (req, res, next) => {
-  const { id } = req.params;
-  const { name, description, price, image_url, stock } = req.body;
-  try {
-    const queryText = `
-      UPDATE products SET
-        name = $1,
-        description = $2,
-        price = $3,
-        image_url = $4,
-        stock = $5
-      WHERE id = $6
-      RETURNING *;
-    `;
-    const result = await db.query(queryText, [name, description, price, image_url || null, stock, id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    next(err);
-  }
-});
+export function showProductForm(p = {}) {
+  document.getElementById('productForm').classList.remove('d-none');
+  document.getElementById('productId').value = p.id || '';
+  document.getElementById('productName').value = p.name || '';
+  document.getElementById('productDesc').value = p.description || '';
+  document.getElementById('productPrice').value = p.price || '';
+  document.getElementById('productStock').value = p.stock || '';
+  document.getElementById('productCategory').value = p.category || '';
+  document.getElementById('productImage').value = p.image_url || '';
+  document.getElementById('productFormTitle').textContent = p.id ? 'Edit Product' : 'New Product';
+  updateImagePreview();
+}
 
-// DELETE /api/products/:id — remove a product
-router.delete('/:id', async (req, res, next) => {
-  const { id } = req.params;
-  try {
-    const result = await db.query('DELETE FROM products WHERE id = $1 RETURNING id', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Product not found' });
-    }
-    res.json({ message: 'Product deleted', id: result.rows[0].id });
-  } catch (err) {
-    next(err);
-  }
-});
+export function hideProductForm() {
+  document.getElementById('productForm').reset();
+  document.getElementById('productForm').classList.add('d-none');
+  const preview = document.getElementById('imagePreview');
+  preview.src = '';
+  preview.classList.add('d-none');
+}
 
-module.exports = router;
+export function saveProduct(e) {
+  e.preventDefault();
+  const id = document.getElementById('productId').value;
+  const body = {
+    name: document.getElementById('productName').value,
+    description: document.getElementById('productDesc').value,
+    price: document.getElementById('productPrice').value,
+    stock: document.getElementById('productStock').value,
+    category: document.getElementById('productCategory').value,
+    image_url: document.getElementById('productImage').value
+  };
+  const method = id ? 'PUT' : 'POST';
+  const url = id ? `${API_URL}/api/products/${id}` : `${API_URL}/api/products`;
+  fetch(url, { method, headers, body: JSON.stringify(body) })
+    .then(() => {
+      showToast('Product saved', 'success');
+      hideProductForm();
+      fetchProducts();
+    });
+}
+
+export function deleteProduct(id) {
+  if (!confirm('Are you sure?')) return;
+  fetch(`${API_URL}/api/products/${id}`, { method: 'DELETE', headers })
+    .then(() => {
+      showToast('Product deleted', 'success');
+      fetchProducts();
+    });
+}
+
+export function updateImagePreview() {
+  const url = document.getElementById('productImage').value.trim();
+  const img = document.getElementById('imagePreview');
+  if (url) {
+    img.src = url;
+    img.classList.remove('d-none');
+  } else {
+    img.src = '';
+    img.classList.add('d-none');
+  }
+}

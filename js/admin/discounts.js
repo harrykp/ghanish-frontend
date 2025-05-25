@@ -1,71 +1,152 @@
-// discounts.js
-import { API_URL, headers, showToast } from './utils.js';
+// public/js/admin/discounts.js
 
-export function fetchDiscountCodes() {
-  fetch(`${API_URL}/api/discounts`, { headers })
-    .then(r => r.json())
-    .then(data => {
-      const list = document.getElementById('discountList');
-      if (!data.length) {
-        list.innerHTML = '<p>No codes found.</p>';
-        return;
-      }
-      list.innerHTML = `
-        <table class="table table-bordered">
-          <thead><tr><th>Code</th><th>% Off</th><th>Expires</th><th>Actions</th></tr></thead>
-          <tbody>
-            ${data.map(d => `
-              <tr>
-                <td>${d.code}</td>
-                <td>${d.percent_off}%</td>
-                <td>${d.expires_at ? new Date(d.expires_at).toLocaleString() : '—'}</td>
-                <td><button class="btn btn-sm btn-danger" data-delete-id="${d.id}">Delete</button></td>
-              </tr>`).join('')}
-          </tbody>
-        </table>`;
-      list.querySelectorAll('[data-delete-id]').forEach(btn =>
-        btn.addEventListener('click', () => deleteDiscountCode(btn.dataset.deleteId)));
+import {
+  showLoading,
+  showError,
+  showToast,
+  delegate
+} from './utils.js';
+
+async function fetchDiscountCodes() {
+  const container = document.getElementById('discounts-container');
+  showLoading(container);
+
+  try {
+    const res = await fetch('/api/discounts');
+    const data = await res.json();
+
+    if (!data.success) {
+      showError(container, data.message || 'Failed to load discount codes.');
+      return;
+    }
+
+    renderDiscounts(data.discounts);
+  } catch (err) {
+    showError(container, 'Error loading discount codes.');
+  }
+}
+
+function renderDiscounts(discounts) {
+  const container = document.getElementById('discounts-container');
+  if (!container) return;
+
+  if (!discounts.length) {
+    container.innerHTML = '<p>No discount codes available.</p>';
+    return;
+  }
+
+  const html = discounts.map(discount => `
+    <div class="discount-card">
+      <p><strong>Code:</strong> ${discount.code}</p>
+      <p>Type: ${discount.type}</p>
+      <p>Value: ${discount.value}${discount.type === 'percent' ? '%' : ' GHS'}</p>
+      <p>Expires: ${discount.expiry_date ? new Date(discount.expiry_date).toLocaleDateString() : 'N/A'}</p>
+      <button class="btn btn-sm btn-warning edit-discount" data-id="${discount.id}">Edit</button>
+      <button class="btn btn-sm btn-danger delete-discount" data-id="${discount.id}">Delete</button>
+    </div>
+  `).join('');
+
+  container.innerHTML = html;
+}
+
+async function deleteDiscount(discountId) {
+  if (!confirm('Delete this discount code?')) return;
+
+  try {
+    const res = await fetch(`/api/discounts/${discountId}`, {
+      method: 'DELETE'
     });
-}
 
-export function showDiscountForm() {
-  document.getElementById('discountForm').classList.remove('d-none');
-}
+    const data = await res.json();
 
-export function hideDiscountForm() {
-  document.getElementById('discountForm').classList.add('d-none');
-  document.getElementById('discountForm').reset();
-}
-
-export function saveDiscountCode(e) {
-  e.preventDefault();
-  const body = {
-    code: document.getElementById('discountCode').value,
-    percent_off: document.getElementById('discountPercent').value,
-    expires_at: document.getElementById('discountExpires').value || null
-  };
-  fetch(`${API_URL}/api/discounts`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body)
-  }).then(res => {
-    if (res.ok) {
-      showToast('Discount code added', 'success');
-      hideDiscountForm();
+    if (data.success) {
+      showToast('success', 'Discount deleted.');
       fetchDiscountCodes();
     } else {
-      showToast('Failed to add code', 'danger');
+      showToast('error', data.message || 'Failed to delete discount.');
     }
+  } catch (err) {
+    showToast('error', 'Error deleting discount.');
+  }
+}
+
+async function fetchDiscountById(discountId) {
+  try {
+    const res = await fetch(`/api/discounts/${discountId}`);
+    const data = await res.json();
+
+    if (data.success) {
+      populateEditForm(data.discount);
+    } else {
+      showToast('error', 'Failed to fetch discount.');
+    }
+  } catch (err) {
+    showToast('error', 'Error fetching discount.');
+  }
+}
+
+function populateEditForm(discount) {
+  const form = document.getElementById('discount-form');
+  form['discount-id'].value = discount.id;
+  form['code'].value = discount.code;
+  form['type'].value = discount.type;
+  form['value'].value = discount.value;
+  form['expiry-date'].value = discount.expiry_date ? discount.expiry_date.split('T')[0] : '';
+}
+
+async function handleDiscountFormSubmit(e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const id = form['discount-id'].value;
+  const code = form['code'].value;
+  const type = form['type'].value;
+  const value = form['value'].value;
+  const expiry_date = form['expiry-date'].value;
+
+  const payload = { code, type, value, expiry_date };
+  const method = id ? 'PUT' : 'POST';
+  const url = id ? `/api/discounts/${id}` : '/api/discounts';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('success', `Discount ${id ? 'updated' : 'created'} successfully.`);
+      form.reset();
+      fetchDiscountCodes();
+    } else {
+      showToast('error', data.message || 'Failed to save discount.');
+    }
+  } catch (err) {
+    showToast('error', 'Error saving discount.');
+  }
+}
+
+function attachEventListeners() {
+  const form = document.getElementById('discount-form');
+  if (form) {
+    form.addEventListener('submit', handleDiscountFormSubmit);
+  }
+
+  delegate(document, '.edit-discount', (e, target) => {
+    const id = target.getAttribute('data-id');
+    if (id) fetchDiscountById(id);
+  });
+
+  delegate(document, '.delete-discount', (e, target) => {
+    const id = target.getAttribute('data-id');
+    if (id) deleteDiscount(id);
   });
 }
 
-function deleteDiscountCode(id) {
-  if (!confirm('Delete this code?')) return;
-  fetch(`${API_URL}/api/discounts/${id}`, {
-    method: 'DELETE',
-    headers
-  }).then(() => {
-    showToast('Code deleted', 'success');
-    fetchDiscountCodes();
-  });
+export function initDiscountsModule() {
+  fetchDiscountCodes();
+  attachEventListeners();
 }

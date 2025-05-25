@@ -1,112 +1,149 @@
-// js/admin/products.js
-import { showToast } from './utils.js';
+// public/js/admin/products.js
 
-const API_URL = window.API_URL;
-const token = localStorage.getItem('token');
-const headers = {
-  'Authorization': `Bearer ${token}`,
-  'Content-Type': 'application/json'
-};
+import {
+  showLoading,
+  showError,
+  showToast,
+  delegate
+} from './utils.js';
 
-export function fetchProducts() {
-  fetch(`${API_URL}/api/products`, { headers })
-    .then(r => r.json())
-    .then(data => {
-      const list = document.getElementById('productList');
-      list.innerHTML = `
-        <table class="table table-bordered">
-          <thead><tr><th>Name</th><th>Price</th><th>Actions</th></tr></thead>
-          <tbody>
-            ${data.map(p => `
-              <tr>
-                <td>
-                  <div class="d-flex align-items-center gap-2">
-                    ${p.image_url ? `<img src="${p.image_url}" alt="" style="height:40px;">` : ''}
-                    <span>${p.name}</span>
-                  </div>
-                </td>
-                <td>USD ${parseFloat(p.price).toFixed(2)}</td>
-                <td>
-                  <button class="btn btn-sm btn-warning me-1 edit-product-btn" data-product='${JSON.stringify(p)}'>Edit</button>
-                  <button class="btn btn-sm btn-danger" onclick="deleteProduct(${p.id})">Delete</button>
-                </td>
-              </tr>`).join('')}
-          </tbody>
-        </table>`;
+async function fetchProducts() {
+  const container = document.getElementById('products-container');
+  showLoading(container);
 
-      // Re-bind edit buttons
-      document.querySelectorAll('.edit-product-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-          try {
-            const data = JSON.parse(btn.dataset.product);
-            showProductForm(data);
-          } catch {
-            showToast('Failed to parse product data', 'danger');
-          }
-        });
-      });
-    });
-}
+  try {
+    const res = await fetch('/api/products');
+    const data = await res.json();
 
-export function showProductForm(p = {}) {
-  document.getElementById('productForm').classList.remove('d-none');
-  document.getElementById('productId').value = p.id || '';
-  document.getElementById('productName').value = p.name || '';
-  document.getElementById('productDesc').value = p.description || '';
-  document.getElementById('productPrice').value = p.price || '';
-  document.getElementById('productStock').value = p.stock || '';
-  document.getElementById('productCategory').value = p.category || '';
-  document.getElementById('productImage').value = p.image_url || '';
-  document.getElementById('productFormTitle').textContent = p.id ? 'Edit Product' : 'New Product';
-  updateImagePreview();
-}
+    if (!data.success) {
+      showError(container, data.message || 'Failed to load products.');
+      return;
+    }
 
-export function hideProductForm() {
-  document.getElementById('productForm').reset();
-  document.getElementById('productForm').classList.add('d-none');
-  const preview = document.getElementById('imagePreview');
-  preview.src = '';
-  preview.classList.add('d-none');
-}
-
-export function saveProduct(e) {
-  e.preventDefault();
-  const id = document.getElementById('productId').value;
-  const body = {
-    name: document.getElementById('productName').value,
-    description: document.getElementById('productDesc').value,
-    price: document.getElementById('productPrice').value,
-    stock: document.getElementById('productStock').value,
-    category: document.getElementById('productCategory').value,
-    image_url: document.getElementById('productImage').value
-  };
-  const method = id ? 'PUT' : 'POST';
-  const url = id ? `${API_URL}/api/products/${id}` : `${API_URL}/api/products`;
-  fetch(url, { method, headers, body: JSON.stringify(body) })
-    .then(() => {
-      showToast('Product saved', 'success');
-      hideProductForm();
-      fetchProducts();
-    });
-}
-
-export function deleteProduct(id) {
-  if (!confirm('Are you sure?')) return;
-  fetch(`${API_URL}/api/products/${id}`, { method: 'DELETE', headers })
-    .then(() => {
-      showToast('Product deleted', 'success');
-      fetchProducts();
-    });
-}
-
-export function updateImagePreview() {
-  const url = document.getElementById('productImage').value.trim();
-  const img = document.getElementById('imagePreview');
-  if (url) {
-    img.src = url;
-    img.classList.remove('d-none');
-  } else {
-    img.src = '';
-    img.classList.add('d-none');
+    renderProducts(data.products);
+  } catch (err) {
+    showError(container, 'Error loading products.');
   }
+}
+
+function renderProducts(products) {
+  const container = document.getElementById('products-container');
+  if (!container) return;
+
+  if (!products.length) {
+    container.innerHTML = '<p>No products available.</p>';
+    return;
+  }
+
+  const html = products.map(product => `
+    <div class="product-card">
+      <p><strong>${product.name}</strong></p>
+      <p>Price: GHS ${Number(product.price).toFixed(2)}</p>
+      <p>Category: ${product.category || 'Uncategorized'}</p>
+      <button class="btn btn-sm btn-warning edit-product" data-id="${product.id}">Edit</button>
+      <button class="btn btn-sm btn-danger delete-product" data-id="${product.id}">Delete</button>
+    </div>
+  `).join('');
+
+  container.innerHTML = html;
+}
+
+async function deleteProduct(productId) {
+  if (!confirm('Are you sure you want to delete this product?')) return;
+
+  try {
+    const res = await fetch(`/api/products/${productId}`, {
+      method: 'DELETE'
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('success', 'Product deleted.');
+      fetchProducts();
+    } else {
+      showToast('error', data.message || 'Failed to delete product.');
+    }
+  } catch (err) {
+    showToast('error', 'Error deleting product.');
+  }
+}
+
+function populateEditForm(product) {
+  const form = document.getElementById('product-form');
+  form['product-id'].value = product.id;
+  form['product-name'].value = product.name;
+  form['product-price'].value = product.price;
+  form['product-category'].value = product.category || '';
+}
+
+async function fetchProductById(productId) {
+  try {
+    const res = await fetch(`/api/products/${productId}`);
+    const data = await res.json();
+
+    if (data.success) {
+      populateEditForm(data.product);
+    } else {
+      showToast('error', 'Failed to load product data.');
+    }
+  } catch (err) {
+    showToast('error', 'Error fetching product.');
+  }
+}
+
+async function handleFormSubmit(e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const id = form['product-id'].value;
+  const name = form['product-name'].value;
+  const price = form['product-price'].value;
+  const category = form['product-category'].value;
+
+  const payload = { name, price, category };
+  const method = id ? 'PUT' : 'POST';
+  const url = id ? `/api/products/${id}` : '/api/products';
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      showToast('success', `Product ${id ? 'updated' : 'created'} successfully.`);
+      form.reset();
+      fetchProducts();
+    } else {
+      showToast('error', data.message || 'Failed to save product.');
+    }
+  } catch (err) {
+    showToast('error', 'Error saving product.');
+  }
+}
+
+function attachEventListeners() {
+  const form = document.getElementById('product-form');
+  if (form) {
+    form.addEventListener('submit', handleFormSubmit);
+  }
+
+  delegate(document, '.edit-product', (e, target) => {
+    const id = target.getAttribute('data-id');
+    if (id) fetchProductById(id);
+  });
+
+  delegate(document, '.delete-product', (e, target) => {
+    const id = target.getAttribute('data-id');
+    if (id) deleteProduct(id);
+  });
+}
+
+export function initProductsModule() {
+  fetchProducts();
+  attachEventListeners();
 }

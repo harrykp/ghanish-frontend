@@ -1,18 +1,54 @@
-// dashboard.js
-import { API_URL, headers } from './utils.js';
+// public/js/admin/dashboard.js
 
-export function loadStats() {
-  fetch(`${API_URL}/api/orders/all`, { headers })
-    .then(r => r.json())
-    .then(data => {
-      const orders = data.orders || [];
-      document.getElementById('statOrders').textContent = orders.length;
-      document.getElementById('statPending').textContent = orders.filter(o => o.status === 'pending').length;
-    });
+import {
+  showLoading,
+  showError,
+  formatCurrency,
+} from './utils.js';
 
-  fetch(`${API_URL}/api/products`, { headers })
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('statProducts').textContent = data.length;
-    });
+async function fetchDashboardStats() {
+  const container = document.getElementById('dashboard-stats');
+  showLoading(container);
+
+  try {
+    const res = await fetch('/api/admin/stats');
+    const data = await res.json();
+
+    if (!data.success) {
+      showError(container, data.message || 'Failed to load dashboard stats.');
+      return;
+    }
+
+    renderDashboardStats(data.stats);
+  } catch (err) {
+    showError(container, 'Error fetching dashboard stats.');
+  }
+}
+
+function renderDashboardStats(stats) {
+  const container = document.getElementById('dashboard-stats');
+  if (!container) return;
+
+  container.innerHTML = `
+    <div class="stat-card">
+      <h4>Total Orders</h4>
+      <p>${stats.totalOrders}</p>
+    </div>
+    <div class="stat-card">
+      <h4>Total Revenue</h4>
+      <p>${formatCurrency(stats.totalRevenue)}</p>
+    </div>
+    <div class="stat-card">
+      <h4>Total Users</h4>
+      <p>${stats.totalUsers}</p>
+    </div>
+    <div class="stat-card">
+      <h4>Active Discounts</h4>
+      <p>${stats.activeDiscounts}</p>
+    </div>
+  `;
+}
+
+export function initDashboardModule() {
+  fetchDashboardStats();
 }

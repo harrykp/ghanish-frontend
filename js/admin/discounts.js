@@ -6,21 +6,22 @@ import {
   showToast,
   delegate
 } from './utils.js';
+import { API_BASE } from './config.js';
 
 async function fetchDiscountCodes() {
   const container = document.getElementById('discounts-container');
   showLoading(container);
 
   try {
-    const res = await fetch('/api/discounts');
+    const res = await fetch(`${API_BASE}/api/discounts`);
     const data = await res.json();
 
-    if (!data.success) {
+    if (!Array.isArray(data)) {
       showError(container, data.message || 'Failed to load discount codes.');
       return;
     }
 
-    renderDiscounts(data.discounts);
+    renderDiscounts(data);
   } catch (err) {
     showError(container, 'Error loading discount codes.');
   }
@@ -38,9 +39,8 @@ function renderDiscounts(discounts) {
   const html = discounts.map(discount => `
     <div class="discount-card">
       <p><strong>Code:</strong> ${discount.code}</p>
-      <p>Type: ${discount.type}</p>
-      <p>Value: ${discount.value}${discount.type === 'percent' ? '%' : ' GHS'}</p>
-      <p>Expires: ${discount.expiry_date ? new Date(discount.expiry_date).toLocaleDateString() : 'N/A'}</p>
+      <p>Type: ${discount.percent_off}%</p>
+      <p>Expires: ${discount.expires_at ? new Date(discount.expires_at).toLocaleDateString() : 'N/A'}</p>
       <button class="btn btn-sm btn-warning edit-discount" data-id="${discount.id}">Edit</button>
       <button class="btn btn-sm btn-danger delete-discount" data-id="${discount.id}">Delete</button>
     </div>
@@ -53,17 +53,17 @@ async function deleteDiscount(discountId) {
   if (!confirm('Delete this discount code?')) return;
 
   try {
-    const res = await fetch(`/api/discounts/${discountId}`, {
+    const res = await fetch(`${API_BASE}/api/discounts/${discountId}`, {
       method: 'DELETE'
     });
 
     const data = await res.json();
 
-    if (data.success) {
+    if (data.message) {
       showToast('success', 'Discount deleted.');
       fetchDiscountCodes();
     } else {
-      showToast('error', data.message || 'Failed to delete discount.');
+      showToast('error', data.error || 'Failed to delete discount.');
     }
   } catch (err) {
     showToast('error', 'Error deleting discount.');
@@ -72,13 +72,13 @@ async function deleteDiscount(discountId) {
 
 async function fetchDiscountById(discountId) {
   try {
-    const res = await fetch(`/api/discounts/${discountId}`);
-    const data = await res.json();
-
-    if (data.success) {
-      populateEditForm(data.discount);
+    const res = await fetch(`${API_BASE}/api/discounts`);
+    const all = await res.json();
+    const discount = all.find(d => d.id === parseInt(discountId));
+    if (discount) {
+      populateEditForm(discount);
     } else {
-      showToast('error', 'Failed to fetch discount.');
+      showToast('error', 'Discount not found.');
     }
   } catch (err) {
     showToast('error', 'Error fetching discount.');
@@ -89,9 +89,9 @@ function populateEditForm(discount) {
   const form = document.getElementById('discount-form');
   form['discount-id'].value = discount.id;
   form['code'].value = discount.code;
-  form['type'].value = discount.type;
-  form['value'].value = discount.value;
-  form['expiry-date'].value = discount.expiry_date ? discount.expiry_date.split('T')[0] : '';
+  form['type'].value = 'percent';
+  form['value'].value = discount.percent_off;
+  form['expiry-date'].value = discount.expires_at ? discount.expires_at.split('T')[0] : '';
 }
 
 async function handleDiscountFormSubmit(e) {
@@ -100,13 +100,12 @@ async function handleDiscountFormSubmit(e) {
   const form = e.target;
   const id = form['discount-id'].value;
   const code = form['code'].value;
-  const type = form['type'].value;
-  const value = form['value'].value;
+  const percent_off = form['value'].value;
   const expiry_date = form['expiry-date'].value;
 
-  const payload = { code, type, value, expiry_date };
+  const payload = { code, percent_off, expires_at: expiry_date || null };
   const method = id ? 'PUT' : 'POST';
-  const url = id ? `/api/discounts/${id}` : '/api/discounts';
+  const url = id ? `${API_BASE}/api/discounts/${id}` : `${API_BASE}/api/discounts`;
 
   try {
     const res = await fetch(url, {
@@ -117,12 +116,12 @@ async function handleDiscountFormSubmit(e) {
 
     const data = await res.json();
 
-    if (data.success) {
+    if (data.message || data.id) {
       showToast('success', `Discount ${id ? 'updated' : 'created'} successfully.`);
       form.reset();
       fetchDiscountCodes();
     } else {
-      showToast('error', data.message || 'Failed to save discount.');
+      showToast('error', data.error || 'Failed to save discount.');
     }
   } catch (err) {
     showToast('error', 'Error saving discount.');

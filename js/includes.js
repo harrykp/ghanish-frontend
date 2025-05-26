@@ -9,12 +9,12 @@ async function loadInclude(id, url) {
       el.innerHTML = await res.text();
 
       if (id === 'nav-placeholder') {
-        // Run nav logic after it's injected
+        // Run nav UI logic after injection
         if (typeof window.initGhanishUI === 'function') {
           window.initGhanishUI();
         }
 
-        // Login/logout visibility toggles
+        // Show/hide login/logout links
         const token = localStorage.getItem('token');
         const loginLink = document.querySelector('#nav-login');
         const logoutLink = document.querySelector('#nav-logout');
@@ -29,15 +29,17 @@ async function loadInclude(id, url) {
           }
         }
 
-        // Logout logic
-        const logoutBtn = document.getElementById('nav-logout');
-        if (logoutBtn) {
-          logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('token');
-            window.location.href = '/login.html';
-          });
-        }
+        // Bind logout buttons (both customer + admin)
+        ['nav-logout', 'admin-logout'].forEach(id => {
+          const btn = document.getElementById(id);
+          if (btn) {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+              localStorage.removeItem('token');
+              window.location.href = '/index.html';
+            });
+          }
+        });
       }
     } else {
       console.error(`Failed to load ${url}: ${res.status}`);
@@ -51,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const token = localStorage.getItem('token');
   let isAdmin = false;
 
-  // If token exists, decode it and check role
+  // Decode token to check admin role
   if (token) {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));

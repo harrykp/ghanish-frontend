@@ -40,7 +40,9 @@ async function fetchAnalytics() {
 }
 
 function renderRevenueChart(labels, values) {
-  const ctx = document.getElementById('revenue-chart').getContext('2d');
+  const canvas = document.getElementById('revenue-chart');
+  if (!canvas) return console.warn('revenue-chart canvas not found');
+  const ctx = canvas.getContext('2d');
   if (revenueChart) revenueChart.destroy();
 
   revenueChart = new Chart(ctx, {
@@ -64,7 +66,9 @@ function renderRevenueChart(labels, values) {
 }
 
 function renderTopProductsChart(labels, values) {
-  const ctx = document.getElementById('top-products-chart').getContext('2d');
+  const canvas = document.getElementById('top-products-chart');
+  if (!canvas) return console.warn('top-products-chart canvas not found');
+  const ctx = canvas.getContext('2d');
   if (topProductsChart) topProductsChart.destroy();
 
   topProductsChart = new Chart(ctx, {

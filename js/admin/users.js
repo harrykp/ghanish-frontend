@@ -6,14 +6,16 @@ import {
   showToast,
   delegate
 } from './utils.js';
-import { API_BASE } from './config.js';
+import { API_BASE, authHeaders } from './config.js';
 
 async function fetchUsers() {
   const container = document.getElementById('users-container');
   showLoading(container);
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/users`);
+    const res = await fetch(`${API_BASE}/api/admin/users`, {
+      headers: authHeaders()
+    });
     const data = await res.json();
 
     if (!data.users && !Array.isArray(data)) {
@@ -28,34 +30,13 @@ async function fetchUsers() {
   }
 }
 
-function renderUsers(users) {
-  const container = document.getElementById('users-container');
-  if (!container) return;
-
-  if (!users.length) {
-    container.innerHTML = '<p>No users found.</p>';
-    return;
-  }
-
-  const html = users.map(user => `
-    <div class="user-card">
-      <p><strong>${user.full_name}</strong> (${user.email})</p>
-      <p>Role: ${user.role}</p>
-      <button class="btn btn-sm btn-warning edit-user" data-id="${user.id}">Edit</button>
-      <button class="btn btn-sm btn-danger delete-user" data-id="${user.id}">Delete</button>
-      <button class="btn btn-sm btn-secondary reset-password" data-id="${user.id}">Reset Password</button>
-    </div>
-  `).join('');
-
-  container.innerHTML = html;
-}
-
 async function deleteUser(userId) {
   if (!confirm('Are you sure you want to delete this user?')) return;
 
   try {
     const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: authHeaders()
     });
 
     const data = await res.json();
@@ -80,7 +61,7 @@ async function resetUserPassword(userId) {
   try {
     const res = await fetch(`${API_BASE}/api/admin/users/${userId}/reset-password`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify({ newPassword })
     });
 
@@ -98,7 +79,9 @@ async function resetUserPassword(userId) {
 
 async function fetchUserById(userId) {
   try {
-    const res = await fetch(`${API_BASE}/api/admin/users`);
+    const res = await fetch(`${API_BASE}/api/admin/users`, {
+      headers: authHeaders()
+    });
     const data = await res.json();
     const user = (data.users || data).find(u => u.id === parseInt(userId));
     if (user) {
@@ -109,14 +92,6 @@ async function fetchUserById(userId) {
   } catch (err) {
     showToast('error', 'Error fetching user.');
   }
-}
-
-function populateEditForm(user) {
-  const form = document.getElementById('user-form');
-  form['user-id'].value = user.id;
-  form['full-name'].value = user.full_name;
-  form['email'].value = user.email;
-  form['role'].value = user.role;
 }
 
 async function handleUserFormSubmit(e) {
@@ -135,7 +110,7 @@ async function handleUserFormSubmit(e) {
   try {
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(payload)
     });
 
@@ -151,28 +126,6 @@ async function handleUserFormSubmit(e) {
   } catch (err) {
     showToast('error', 'Error saving user.');
   }
-}
-
-function attachEventListeners() {
-  const form = document.getElementById('user-form');
-  if (form) {
-    form.addEventListener('submit', handleUserFormSubmit);
-  }
-
-  delegate(document, '.edit-user', (e, target) => {
-    const id = target.getAttribute('data-id');
-    if (id) fetchUserById(id);
-  });
-
-  delegate(document, '.delete-user', (e, target) => {
-    const id = target.getAttribute('data-id');
-    if (id) deleteUser(id);
-  });
-
-  delegate(document, '.reset-password', (e, target) => {
-    const id = target.getAttribute('data-id');
-    if (id) resetUserPassword(id);
-  });
 }
 
 export function initUsersModule() {

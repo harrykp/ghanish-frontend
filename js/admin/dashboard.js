@@ -5,14 +5,16 @@ import {
   showError,
   formatCurrency
 } from './utils.js';
-import { API_BASE } from './config.js';
+import { API_BASE, authHeaders } from './config.js';
 
 async function fetchDashboardStats() {
   const container = document.getElementById('dashboard-stats');
   showLoading(container);
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/stats`);
+    const res = await fetch(`${API_BASE}/api/admin/stats`, {
+      headers: authHeaders()
+    });
     const data = await res.json();
 
     if (!data.stats) {

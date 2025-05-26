@@ -1,7 +1,7 @@
 // public/js/admin/analytics.js
 
 import { showLoading, showError } from './utils.js';
-import { API_BASE } from './config.js';
+import { API_BASE, authHeaders } from './config.js';
 
 let revenueChart, topProductsChart;
 
@@ -10,7 +10,9 @@ async function fetchRevenueAnalytics() {
   showLoading(container);
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/revenue`);
+    const res = await fetch(`${API_BASE}/api/admin/revenue`, {
+      headers: authHeaders()
+    });
     const data = await res.json();
 
     if (!data.labels || !data.values) {
@@ -53,7 +55,9 @@ async function fetchTopProductsAnalytics() {
   showLoading(container);
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/top-products`);
+    const res = await fetch(`${API_BASE}/api/admin/top-products`, {
+      headers: authHeaders()
+    });
     const data = await res.json();
 
     if (!Array.isArray(data.products)) {

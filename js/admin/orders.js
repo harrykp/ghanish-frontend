@@ -64,12 +64,11 @@ function attachEventListeners() {
     }
   });
 
-  delegate(document, '.modal .close', () => {
-    hideOrderModal();
-  });
+  delegate(document, '.modal .close', () => hideOrderModal());
 }
 
 export function initOrdersModule() {
   fetchOrders(currentPage);
   attachEventListeners();
 }
+

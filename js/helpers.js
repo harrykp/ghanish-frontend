@@ -89,4 +89,3 @@ window.requireAdmin = function () {
   }
 };
 
-};

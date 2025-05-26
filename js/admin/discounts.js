@@ -6,14 +6,16 @@ import {
   showToast,
   delegate
 } from './utils.js';
-import { API_BASE } from './config.js';
+import { API_BASE, authHeaders } from './config.js';
 
 async function fetchDiscountCodes() {
   const container = document.getElementById('discounts-container');
   showLoading(container);
 
   try {
-    const res = await fetch(`${API_BASE}/api/discounts`);
+    const res = await fetch(`${API_BASE}/api/discounts`, {
+      headers: authHeaders()
+    });
     const data = await res.json();
 
     if (!Array.isArray(data)) {
@@ -27,34 +29,13 @@ async function fetchDiscountCodes() {
   }
 }
 
-function renderDiscounts(discounts) {
-  const container = document.getElementById('discounts-container');
-  if (!container) return;
-
-  if (!discounts.length) {
-    container.innerHTML = '<p>No discount codes available.</p>';
-    return;
-  }
-
-  const html = discounts.map(discount => `
-    <div class="discount-card">
-      <p><strong>Code:</strong> ${discount.code}</p>
-      <p>Type: ${discount.percent_off}%</p>
-      <p>Expires: ${discount.expires_at ? new Date(discount.expires_at).toLocaleDateString() : 'N/A'}</p>
-      <button class="btn btn-sm btn-warning edit-discount" data-id="${discount.id}">Edit</button>
-      <button class="btn btn-sm btn-danger delete-discount" data-id="${discount.id}">Delete</button>
-    </div>
-  `).join('');
-
-  container.innerHTML = html;
-}
-
 async function deleteDiscount(discountId) {
   if (!confirm('Delete this discount code?')) return;
 
   try {
     const res = await fetch(`${API_BASE}/api/discounts/${discountId}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: authHeaders()
     });
 
     const data = await res.json();
@@ -72,7 +53,9 @@ async function deleteDiscount(discountId) {
 
 async function fetchDiscountById(discountId) {
   try {
-    const res = await fetch(`${API_BASE}/api/discounts`);
+    const res = await fetch(`${API_BASE}/api/discounts`, {
+      headers: authHeaders()
+    });
     const all = await res.json();
     const discount = all.find(d => d.id === parseInt(discountId));
     if (discount) {
@@ -83,15 +66,6 @@ async function fetchDiscountById(discountId) {
   } catch (err) {
     showToast('error', 'Error fetching discount.');
   }
-}
-
-function populateEditForm(discount) {
-  const form = document.getElementById('discount-form');
-  form['discount-id'].value = discount.id;
-  form['code'].value = discount.code;
-  form['type'].value = 'percent';
-  form['value'].value = discount.percent_off;
-  form['expiry-date'].value = discount.expires_at ? discount.expires_at.split('T')[0] : '';
 }
 
 async function handleDiscountFormSubmit(e) {
@@ -110,7 +84,7 @@ async function handleDiscountFormSubmit(e) {
   try {
     const res = await fetch(url, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify(payload)
     });
 
@@ -126,23 +100,6 @@ async function handleDiscountFormSubmit(e) {
   } catch (err) {
     showToast('error', 'Error saving discount.');
   }
-}
-
-function attachEventListeners() {
-  const form = document.getElementById('discount-form');
-  if (form) {
-    form.addEventListener('submit', handleDiscountFormSubmit);
-  }
-
-  delegate(document, '.edit-discount', (e, target) => {
-    const id = target.getAttribute('data-id');
-    if (id) fetchDiscountById(id);
-  });
-
-  delegate(document, '.delete-discount', (e, target) => {
-    const id = target.getAttribute('data-id');
-    if (id) deleteDiscount(id);
-  });
 }
 
 export function initDiscountsModule() {

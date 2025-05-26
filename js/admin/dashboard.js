@@ -3,48 +3,51 @@
 import {
   showLoading,
   showError,
-  formatCurrency,
+  formatCurrency
 } from './utils.js';
+import { API_BASE } from './config.js';
 
 async function fetchDashboardStats() {
   const container = document.getElementById('dashboard-stats');
   showLoading(container);
 
   try {
-    const res = await fetch('/api/admin/stats');
+    const res = await fetch(`${API_BASE}/api/admin/stats`);
     const data = await res.json();
 
-    if (!data.success) {
+    if (!data.stats) {
       showError(container, data.message || 'Failed to load dashboard stats.');
       return;
     }
 
-    renderDashboardStats(data.stats);
+    renderStats(data.stats);
   } catch (err) {
-    showError(container, 'Error fetching dashboard stats.');
+    showError(container, 'Error loading dashboard stats.');
   }
 }
 
-function renderDashboardStats(stats) {
+function renderStats(stats) {
   const container = document.getElementById('dashboard-stats');
   if (!container) return;
 
   container.innerHTML = `
-    <div class="stat-card">
-      <h4>Total Orders</h4>
-      <p>${stats.totalOrders}</p>
-    </div>
-    <div class="stat-card">
-      <h4>Total Revenue</h4>
-      <p>${formatCurrency(stats.totalRevenue)}</p>
-    </div>
-    <div class="stat-card">
-      <h4>Total Users</h4>
-      <p>${stats.totalUsers}</p>
-    </div>
-    <div class="stat-card">
-      <h4>Active Discounts</h4>
-      <p>${stats.activeDiscounts}</p>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <h4>Total Orders</h4>
+        <p>${stats.totalOrders}</p>
+      </div>
+      <div class="stat-box">
+        <h4>Total Revenue</h4>
+        <p>${formatCurrency(stats.totalRevenue)}</p>
+      </div>
+      <div class="stat-box">
+        <h4>Users</h4>
+        <p>${stats.totalUsers}</p>
+      </div>
+      <div class="stat-box">
+        <h4>Products</h4>
+        <p>${stats.totalProducts}</p>
+      </div>
     </div>
   `;
 }

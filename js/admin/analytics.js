@@ -5,24 +5,30 @@ import { API_BASE, authHeaders } from './config.js';
 
 let revenueChart, topProductsChart;
 
-async function fetchRevenueAnalytics() {
-  const container = document.getElementById('revenue-chart-container');
-  showLoading(container);
+async function fetchAnalytics() {
+  const revenueContainer = document.getElementById('revenue-chart-container');
+  const productsContainer = document.getElementById('top-products-chart-container');
+
+  showLoading(revenueContainer);
+  showLoading(productsContainer);
 
   try {
-    const res = await fetch(`${API_BASE}/api/admin/revenue`, {
+    const res = await fetch(`${API_BASE}/api/admin/analytics`, {
       headers: authHeaders()
     });
     const data = await res.json();
 
-    if (!data.labels || !data.values) {
-      showError(container, data.message || 'Failed to load revenue data.');
+    if (!data.topProducts || !data.orderTrends) {
+      showError(revenueContainer, 'Failed to load revenue analytics.');
+      showError(productsContainer, 'Failed to load top products.');
       return;
     }
 
-    renderRevenueChart(data.labels, data.values);
+    renderRevenueChart(data.orderTrends.labels, data.orderTrends.values);
+    renderTopProductsChart(data.topProducts.labels, data.topProducts.values);
   } catch (err) {
-    showError(container, 'Error loading revenue analytics.');
+    showError(revenueContainer, 'Error loading revenue analytics.');
+    showError(productsContainer, 'Error loading top products data.');
   }
 }
 
@@ -35,7 +41,7 @@ function renderRevenueChart(labels, values) {
     data: {
       labels,
       datasets: [{
-        label: 'Revenue (GHS)',
+        label: 'Orders per Month',
         data: values,
         backgroundColor: 'rgba(75, 192, 192, 0.6)'
       }]
@@ -44,34 +50,10 @@ function renderRevenueChart(labels, values) {
       responsive: true,
       plugins: {
         legend: { display: false },
-        title: { display: true, text: 'Revenue Over Time' }
+        title: { display: true, text: 'Order Trends' }
       }
     }
   });
-}
-
-async function fetchTopProductsAnalytics() {
-  const container = document.getElementById('top-products-chart-container');
-  showLoading(container);
-
-  try {
-    const res = await fetch(`${API_BASE}/api/admin/top-products`, {
-      headers: authHeaders()
-    });
-    const data = await res.json();
-
-    if (!Array.isArray(data.products)) {
-      showError(container, data.message || 'Failed to load top products.');
-      return;
-    }
-
-    const labels = data.products.map(p => p.product_name);
-    const values = data.products.map(p => p.total_sold);
-
-    renderTopProductsChart(labels, values);
-  } catch (err) {
-    showError(container, 'Error loading top products data.');
-  }
 }
 
 function renderTopProductsChart(labels, values) {
@@ -83,7 +65,7 @@ function renderTopProductsChart(labels, values) {
     data: {
       labels,
       datasets: [{
-        label: 'Top Selling Products',
+        label: 'Top Products',
         data: values,
         backgroundColor: [
           '#4dc9f6', '#f67019', '#f53794',
@@ -103,6 +85,5 @@ function renderTopProductsChart(labels, values) {
 }
 
 export function initAnalyticsModule() {
-  fetchRevenueAnalytics();
-  fetchTopProductsAnalytics();
+  fetchAnalytics();
 }

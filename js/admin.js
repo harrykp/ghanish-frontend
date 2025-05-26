@@ -5,15 +5,55 @@ if (!token) {
   location.href = "login.html";
 }
 
+const API_URL = 'https://ghanish-backend.onrender.com'; // Add this if missing
 const headers = {
   'Authorization': `Bearer ${token}`,
   'Content-Type': 'application/json'
 };
 
-let allOrders = [];
-let currentOrderPage = 1;
-const ordersPerPage = 10;
+// === Nav Link Highlighting ===
+document.addEventListener('DOMContentLoaded', () => {
+  const path = window.location.pathname;
+  const links = document.querySelectorAll('#adminNavbar .nav-link');
+  links.forEach(link => {
+    if (link.getAttribute('href') === path) {
+      link.classList.add('active');
+    } else {
+      link.classList.remove('active');
+    }
+  });
+});
 
+// === Page-Aware Initialization ===
+document.addEventListener('DOMContentLoaded', () => {
+  const page = location.pathname;
+
+  if (page === '/admin.html') {
+    loadStats();
+  }
+
+  if (page === '/admin-orders.html') {
+    fetchOrders();
+  }
+
+  if (page === '/admin-products.html') {
+    fetchProducts();
+  }
+
+  if (page === '/admin-users.html') {
+    fetchUsers();
+  }
+
+  if (page === '/admin-discounts.html') {
+    fetchDiscountCodes();
+  }
+
+  if (page === '/admin-analytics.html') {
+    fetchRevenueAnalytics();
+  }
+});
+
+// === Dashboard Stats ===
 function loadStats() {
   fetch(`${API_URL}/api/orders/all`, { headers })
     .then(r => r.json())
@@ -30,6 +70,11 @@ function loadStats() {
     });
 }
 
+// === Orders ===
+let allOrders = [];
+let currentOrderPage = 1;
+const ordersPerPage = 10;
+
 function fetchOrders(page = 1) {
   currentOrderPage = page;
   fetch(`${API_URL}/api/orders/all?page=${page}&limit=${ordersPerPage}`, { headers })
@@ -42,6 +87,7 @@ function fetchOrders(page = 1) {
 
 function renderOrderTable(orders, currentPage, totalOrders) {
   const list = document.getElementById('orderList');
+  if (!list) return;
   list.innerHTML = `
     <table class="table table-bordered">
       <thead><tr><th>ID</th><th>User</th><th>Total</th><th>Status</th><th>Change</th></tr></thead>
@@ -101,7 +147,8 @@ function exportOrdersToCSV() {
 }
 
 function printOrderModal() {
-  const modalContent = document.querySelector('#orderModal .modal-content').innerHTML;
+  const modalContent = document.querySelector('#orderModal .modal-content')?.innerHTML;
+  if (!modalContent) return;
   const win = window.open('', '_blank', 'width=800,height=600');
   win.document.write(`
     <html><head><title>Print Order</title>
@@ -116,32 +163,21 @@ function printOrderModal() {
   }, 500);
 }
 
-// Define fetchRevenueAnalytics, showProductForm, editUser, resetPassword, deleteUser, showDiscountForm
-// These must be attached to window to ensure global accessibility
-window.fetchRevenueAnalytics = function () { /* previously defined logic */ };
-window.showProductForm = function (p = {}) { /* existing logic */ };
-window.editUser = function (id) { /* existing logic */ };
-window.resetPassword = function (id) { /* existing logic */ };
-window.deleteUser = function (id) { /* existing logic */ };
-window.showDiscountForm = function () { document.getElementById('discountForm').classList.remove('d-none'); };
-window.viewOrderDetails = function () { /* existing logic */ };
-
-document.addEventListener('DOMContentLoaded', () => {
-  const tabButtons = document.querySelectorAll('#adminTabs .nav-link');
-  if (tabButtons.length) {
-    const tabTrigger = new bootstrap.Tab(tabButtons[0]);
-    tabTrigger.show();
-    tabButtons.forEach(btn => {
-      btn.addEventListener('shown.bs.tab', e => {
-        const target = e.target.getAttribute('href');
-        if (target === '#orders') fetchOrders();
-        if (target === '#products') fetchProducts();
-        if (target === '#analytics') fetchRevenueAnalytics();
-        if (target === '#discounts') fetchDiscountCodes();
-        if (target === '#users') fetchUsers();
-      });
-    });
-    fetchOrders();
-    loadStats();
-  }
-});
+// === Placeholder global handlers (to define or retain from your previous logic)
+window.fetchRevenueAnalytics = function () { /* to be implemented */ };
+window.fetchProducts = function () { /* to be implemented */ };
+window.fetchUsers = function () { /* to be implemented */ };
+window.fetchDiscountCodes = function () { /* to be implemented */ };
+window.saveProduct = function () { /* to be implemented */ };
+window.saveUser = function () { /* to be implemented */ };
+window.saveDiscountCode = function () { /* to be implemented */ };
+window.showProductForm = function () { document.getElementById('productForm')?.classList.remove('d-none'); };
+window.showUserForm = function () { document.getElementById('userForm')?.classList.remove('d-none'); };
+window.showDiscountForm = function () { document.getElementById('discountForm')?.classList.remove('d-none'); };
+window.hideProductForm = function () { document.getElementById('productForm')?.classList.add('d-none'); };
+window.hideUserForm = function () { document.getElementById('userForm')?.classList.add('d-none'); };
+window.hideDiscountForm = function () { document.getElementById('discountForm')?.classList.add('d-none'); };
+window.viewOrderDetails = function () { /* to be implemented */ };
+window.editUser = function () { /* to be implemented */ };
+window.resetPassword = function () { /* to be implemented */ };
+window.deleteUser = function () { /* to be implemented */ };

@@ -1,4 +1,4 @@
-// public/js/includes.js
+// js/includes.js
 
 async function loadInclude(id, url) {
   const el = document.getElementById(id);
@@ -8,11 +8,30 @@ async function loadInclude(id, url) {
     if (res.ok) {
       el.innerHTML = await res.text();
 
-      // After nav loads, handle logout (if admin)
       if (id === 'nav-placeholder') {
-        const isAdmin = location.pathname.startsWith('/admin');
-        const logoutBtn = document.getElementById('admin-logout');
-        if (isAdmin && logoutBtn) {
+        // Run nav logic after it's injected
+        if (typeof window.initGhanishUI === 'function') {
+          window.initGhanishUI();
+        }
+
+        // Login/logout visibility toggles
+        const token = localStorage.getItem('token');
+        const loginLink = document.querySelector('#nav-login');
+        const logoutLink = document.querySelector('#nav-logout');
+
+        if (loginLink && logoutLink) {
+          if (token) {
+            loginLink.style.display = 'none';
+            logoutLink.style.display = 'inline-block';
+          } else {
+            loginLink.style.display = 'inline-block';
+            logoutLink.style.display = 'none';
+          }
+        }
+
+        // Logout logic
+        const logoutBtn = document.getElementById('nav-logout');
+        if (logoutBtn) {
           logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('token');
@@ -28,10 +47,21 @@ async function loadInclude(id, url) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  const isAdmin = location.pathname.startsWith('/admin');
-  const navUrl = isAdmin ? 'admin-nav.html' : 'nav.html';
+document.addEventListener('DOMContentLoaded', async () => {
+  const token = localStorage.getItem('token');
+  let isAdmin = false;
 
-  loadInclude('nav-placeholder', navUrl);
+  // If token exists, decode it and check role
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      isAdmin = payload.role === 'admin';
+    } catch (err) {
+      console.warn('Invalid token payload', err);
+    }
+  }
+
+  const navFile = isAdmin ? 'admin-nav.html' : 'nav.html';
+  loadInclude('nav-placeholder', navFile);
   loadInclude('footer-placeholder', 'footer.html');
 });

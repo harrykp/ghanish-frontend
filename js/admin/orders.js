@@ -68,7 +68,6 @@ function attachEventListeners() {
     hideOrderModal();
   });
 }
-..
 
 export function initOrdersModule() {
   fetchOrders(currentPage);

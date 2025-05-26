@@ -96,5 +96,13 @@ function renderTopProductsChart(labels, values) {
 }
 
 export function initAnalyticsModule() {
+  const revenue = document.getElementById('revenue-chart');
+  const products = document.getElementById('top-products-chart');
+
+  if (!revenue || !products) {
+    console.warn('Canvas not ready, retrying in 250ms...');
+    return setTimeout(initAnalyticsModule, 250);
+  }
+
   fetchAnalytics();
 }

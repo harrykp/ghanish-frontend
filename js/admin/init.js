@@ -2,37 +2,34 @@
 
 const tabs = {
   dashboard: async () => {
-    document.getElementById('dashboard-tab').classList.remove('d-none');
+    document.getElementById('dashboard-tab').classList.remove('hidden');
     const mod = await import('./dashboard.js');
     mod.initDashboardModule();
   },
   orders: async () => {
-    document.getElementById('orders-tab').classList.remove('d-none');
+    document.getElementById('orders-tab').classList.remove('hidden');
     const mod = await import('./orders.js');
     mod.initOrdersModule();
   },
   products: async () => {
-    document.getElementById('products-tab').classList.remove('d-none');
+    document.getElementById('products-tab').classList.remove('hidden');
     const mod = await import('./products.js');
     mod.initProductsModule();
   },
   users: async () => {
-    document.getElementById('users-tab').classList.remove('d-none');
+    document.getElementById('users-tab').classList.remove('hidden');
     const mod = await import('./users.js');
     mod.initUsersModule();
   },
   discounts: async () => {
-    document.getElementById('discounts-tab').classList.remove('d-none');
+    document.getElementById('discounts-tab').classList.remove('hidden');
     const mod = await import('./discounts.js');
     mod.initDiscountsModule();
   },
-  analytics: () => {
-    document.getElementById('analytics-tab').classList.remove('d-none');
-    // Delay to ensure canvas elements render before getContext() is called
-    setTimeout(async () => {
-      const mod = await import('./analytics.js');
-      mod.initAnalyticsModule();
-    }, 100);
+  analytics: async () => {
+    document.getElementById('analytics-tab').classList.remove('hidden');
+    const mod = await import('./analytics.js');
+    mod.initAnalyticsModule();
   }
 };
 
@@ -56,7 +53,7 @@ function initTabRouting() {
 
 function showTab(tabName) {
   document.querySelectorAll('.admin-tab').forEach(section =>
-    section.classList.add('d-none')
+    section.classList.add('hidden')
   );
 
   document.querySelectorAll('#admin-tabs a[data-tab]').forEach(link =>
@@ -66,7 +63,7 @@ function showTab(tabName) {
   const section = document.getElementById(`${tabName}-tab`);
   const navLink = document.querySelector(`#admin-tabs a[data-tab="${tabName}"]`);
 
-  if (section) section.classList.remove('d-none');
+  if (section) section.classList.remove('hidden');
   if (navLink) navLink.classList.add('active');
 
   if (tabs[tabName]) tabs[tabName]();

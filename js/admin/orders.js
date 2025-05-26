@@ -50,7 +50,25 @@ async function fetchOrderDetails(orderId) {
   }
 }
 
-// ...rest unchanged...
+function attachEventListeners() {
+  delegate(document, '.view-order', (e, target) => {
+    const orderId = target.getAttribute('data-id');
+    if (orderId) fetchOrderDetails(orderId);
+  });
+
+  delegate(document, '#orders-pagination', (e, target) => {
+    const page = parseInt(target.getAttribute('data-page'));
+    if (!isNaN(page)) {
+      currentPage = page;
+      fetchOrders(currentPage);
+    }
+  });
+
+  delegate(document, '.modal .close', () => {
+    hideOrderModal();
+  });
+}
+..
 
 export function initOrdersModule() {
   fetchOrders(currentPage);

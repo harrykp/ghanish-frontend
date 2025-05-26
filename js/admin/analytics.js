@@ -16,7 +16,13 @@ async function fetchAnalytics() {
     const res = await fetch(`${API_BASE}/api/admin/analytics`, {
       headers: authHeaders()
     });
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
     const data = await res.json();
+    console.log('Analytics data:', data);
 
     if (!data.topProducts || !data.orderTrends) {
       showError(revenueContainer, 'Failed to load revenue analytics.');
@@ -27,6 +33,7 @@ async function fetchAnalytics() {
     renderRevenueChart(data.orderTrends.labels, data.orderTrends.values);
     renderTopProductsChart(data.topProducts.labels, data.topProducts.values);
   } catch (err) {
+    console.error('❌ Error loading analytics:', err);
     showError(revenueContainer, 'Error loading revenue analytics.');
     showError(productsContainer, 'Error loading top products data.');
   }

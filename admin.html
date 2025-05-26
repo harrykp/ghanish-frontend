@@ -2,204 +2,106 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Admin Dashboard – Ghanish</title>
-  <link rel="icon" href="images/ghanish-logo.png">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="css/styles.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="/css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div id="nav-placeholder"></div>
+  <header>
+    <h1>Admin Dashboard</h1>
+    <nav id="admin-tabs">
+      <a href="#dashboard" data-tab="dashboard" class="active">Dashboard</a>
+      <a href="#orders" data-tab="orders">Orders</a>
+      <a href="#products" data-tab="products">Products</a>
+      <a href="#users" data-tab="users">Users</a>
+      <a href="#discounts" data-tab="discounts">Discounts</a>
+      <a href="#analytics" data-tab="analytics">Analytics</a>
+    </nav>
+  </header>
 
-  <section class="py-5">
-    <div class="container">
-      <h2 class="mb-4 text-center">Admin Dashboard</h2>
+  <main>
+    <!-- Dashboard Tab -->
+    <section id="dashboard-tab" class="admin-tab">
+      <h2>Dashboard Overview</h2>
+      <div id="dashboard-stats"></div>
+    </section>
 
-      <!-- Admin Stats -->
-      <div class="row text-center mb-4" id="adminStats">
-        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h5>Total Orders</h5><div id="statOrders" class="fs-4">–</div></div></div></div>
-        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h5>Pending Orders</h5><div id="statPending" class="fs-4">–</div></div></div></div>
-        <div class="col-md-4"><div class="card shadow-sm"><div class="card-body"><h5>Total Products</h5><div id="statProducts" class="fs-4">–</div></div></div></div>
-      </div>
+    <!-- Orders Tab -->
+    <section id="orders-tab" class="admin-tab d-none">
+      <h2>Orders</h2>
+      <div id="orders-container"></div>
+      <div id="orders-pagination" class="pagination"></div>
 
-      <!-- Tabs -->
-      <ul class="nav nav-tabs" id="adminTabs">
-        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#orders">Orders</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#products">Products</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#analytics">Analytics</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#discounts">Discounts</a></li>
-        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#users">Users</a></li>
-      </ul>
-
-      <div class="tab-content mt-4">
-        <!-- Orders Tab -->
-        <div class="tab-pane fade show active" id="orders">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <input type="text" class="form-control me-3" style="max-width: 300px;" placeholder="Filter by status..." id="orderFilterInput">
-            <div>
-              <button class="btn btn-outline-secondary me-2" id="exportCSVBtn">Export CSV</button>
-              <button class="btn btn-outline-primary" id="printOrderBtn">Print</button>
-            </div>
-          </div>
-          <div id="orderList"></div>
-        </div>
-
-        <!-- Products Tab -->
-        <div class="tab-pane fade" id="products">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Manage Products</h5>
-            <button class="btn btn-primary" id="addProductBtn">+ New Product</button>
-          </div>
-          <div id="productList" class="mb-4"></div>
-          <form id="productForm" class="border p-3 d-none">
-            <h6 class="mb-3" id="productFormTitle">New Product</h6>
-            <input type="hidden" id="productId" />
-            <div class="mb-2">
-              <label for="productName" class="form-label">Product Name</label>
-              <input type="text" id="productName" class="form-control" required />
-            </div>
-            <div class="mb-2">
-              <label for="productDesc" class="form-label">Description</label>
-              <textarea id="productDesc" class="form-control"></textarea>
-            </div>
-            <div class="mb-2">
-              <label for="productPrice" class="form-label">Price (USD)</label>
-              <input type="number" id="productPrice" class="form-control" step="0.01" required />
-            </div>
-            <div class="mb-2">
-              <label for="productStock" class="form-label">Stock</label>
-              <input type="number" id="productStock" class="form-control" step="1" min="0" required />
-            </div>
-            <div class="mb-2">
-              <label for="productCategory" class="form-label">Category</label>
-              <select id="productCategory" class="form-select" required>
-                <option value="">Select Category</option>
-                <option value="Shrimp">Shrimp</option>
-                <option value="Fish">Fish</option>
-                <option value="Seasoning">Seasoning</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="productImage" class="form-label">Image URL</label>
-              <input type="url" id="productImage" class="form-control" />
-              <div class="mt-2"><img id="imagePreview" src="" alt="" class="img-fluid border d-none" style="max-height: 200px;" /></div>
-            </div>
-            <div class="d-flex justify-content-between">
-              <button type="submit" class="btn btn-success" id="saveProductBtn">Save Product</button>
-              <button type="button" class="btn btn-secondary" id="cancelProductBtn">Cancel</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Analytics Tab -->
-        <div class="tab-pane fade" id="analytics">
-          <h5 class="mb-3">Monthly Revenue (USD)</h5>
-          <canvas id="revenueChart" height="100"></canvas>
-          <hr class="my-4" />
-          <h5 class="mb-3">Top Selling Products</h5>
-          <canvas id="topProductsChart" height="100"></canvas>
-        </div>
-
-        <!-- Discounts Tab -->
-        <div class="tab-pane fade" id="discounts">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Manage Discount Codes</h5>
-            <button class="btn btn-success" id="addDiscountBtn">+ New Code</button>
-          </div>
-          <div id="discountList" class="mb-3"></div>
-
-          <form id="discountForm" class="border p-3 d-none">
-            <h6 class="mb-3">New Discount Code</h6>
-            <div class="mb-2">
-              <label for="discountCode" class="form-label">Code</label>
-              <input type="text" id="discountCode" class="form-control" required>
-            </div>
-            <div class="mb-2">
-              <label for="discountPercent" class="form-label">% Off</label>
-              <input type="number" id="discountPercent" class="form-control" min="1" max="100" required>
-            </div>
-            <div class="mb-3">
-              <label for="discountExpires" class="form-label">Expires At</label>
-              <input type="datetime-local" id="discountExpires" class="form-control">
-            </div>
-            <div class="d-flex justify-content-between">
-              <button type="submit" class="btn btn-success" id="saveDiscountBtn">Save</button>
-              <button type="button" class="btn btn-secondary" id="cancelDiscountBtn">Cancel</button>
-            </div>
-          </form>
-        </div>
-
-        <!-- Users Tab -->
-        <div class="tab-pane fade" id="users">
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0">Manage Users</h5>
-            <button class="btn btn-primary" id="addUserBtn">+ New User</button>
-          </div>
-          <div id="userList" class="mb-3"></div>
-          <form id="userForm" class="border p-3 d-none">
-            <h6 class="mb-3">User Details</h6>
-            <input type="hidden" id="userId">
-            <div class="mb-2">
-              <label for="userFullName" class="form-label">Full Name</label>
-              <input type="text" id="userFullName" class="form-control" required>
-            </div>
-            <div class="mb-2">
-              <label for="userEmail" class="form-label">Email</label>
-              <input type="email" id="userEmail" class="form-control" required>
-            </div>
-            <div class="mb-2">
-              <label for="userPhone" class="form-label">Phone</label>
-              <input type="tel" id="userPhone" class="form-control" required>
-            </div>
-            <div class="mb-2">
-              <label for="userRole" class="form-label">Role</label>
-              <select id="userRole" class="form-select">
-                <option value="customer">Customer</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-            <div class="mb-3">
-              <label for="userPassword" class="form-label">Password (only if setting/changing)</label>
-              <input type="password" id="userPassword" class="form-control">
-            </div>
-            <div class="d-flex justify-content-between">
-              <button type="submit" class="btn btn-success" id="saveUserBtn">Save</button>
-              <button type="button" class="btn btn-secondary" id="cancelUserBtn">Cancel</button>
-            </div>
-          </form>
+      <!-- Order Details Modal -->
+      <div id="order-details-modal" class="modal">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <div class="modal-body"></div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- Order Modal -->
-  <div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header"><h5 class="modal-title">Order Details</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body">
-          <p><strong>Customer:</strong> <span id="modalCustomerName"></span></p>
-          <p><strong>Phone:</strong> <span id="modalCustomerPhone"></span></p>
-          <p><strong>Status:</strong> <span id="modalOrderStatus"></span></p>
-          <p><strong>Date:</strong> <span id="modalOrderDate"></span></p>
-          <p><a href="profile.html" id="modalViewProfileLink" target="_blank">View Full Profile</a></p>
-          <table class="table table-sm table-bordered mt-3">
-            <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
-            <tbody id="modalItemsBody"></tbody>
-          </table>
-          <h5 class="text-end">Total: <span id="modalOrderTotal"></span></h5>
-        </div>
+    <!-- Products Tab -->
+    <section id="products-tab" class="admin-tab d-none">
+      <h2>Products</h2>
+      <form id="product-form">
+        <input type="hidden" name="product-id" />
+        <input type="text" name="product-name" placeholder="Product Name" required />
+        <input type="number" name="product-price" placeholder="Price" step="0.01" required />
+        <input type="text" name="product-category" placeholder="Category" />
+        <button type="submit">Save Product</button>
+      </form>
+      <div id="products-container"></div>
+    </section>
+
+    <!-- Users Tab -->
+    <section id="users-tab" class="admin-tab d-none">
+      <h2>Users</h2>
+      <form id="user-form">
+        <input type="hidden" name="user-id" />
+        <input type="text" name="full-name" placeholder="Full Name" required />
+        <input type="email" name="email" placeholder="Email" required />
+        <select name="role" required>
+          <option value="">Select Role</option>
+          <option value="admin">Admin</option>
+          <option value="customer">Customer</option>
+        </select>
+        <button type="submit">Save User</button>
+      </form>
+      <div id="users-container"></div>
+    </section>
+
+    <!-- Discounts Tab -->
+    <section id="discounts-tab" class="admin-tab d-none">
+      <h2>Discount Codes</h2>
+      <form id="discount-form">
+        <input type="hidden" name="discount-id" />
+        <input type="text" name="code" placeholder="Discount Code" required />
+        <select name="type" required>
+          <option value="">Select Type</option>
+          <option value="percent">Percentage</option>
+          <option value="fixed">Fixed Amount</option>
+        </select>
+        <input type="number" name="value" placeholder="Value" required />
+        <input type="date" name="expiry-date" />
+        <button type="submit">Save Discount</button>
+      </form>
+      <div id="discounts-container"></div>
+    </section>
+
+    <!-- Analytics Tab -->
+    <section id="analytics-tab" class="admin-tab d-none">
+      <h2>Analytics</h2>
+      <div id="revenue-chart-container">
+        <canvas id="revenue-chart" width="400" height="200"></canvas>
       </div>
-    </div>
-  </div>
+      <div id="top-products-chart-container">
+        <canvas id="top-products-chart" width="400" height="200"></canvas>
+      </div>
+    </section>
+  </main>
 
-  <div id="footer-placeholder"></div>
-
-  <!-- JS Dependencies -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="js/includes.js"></script>
-  <script src="js/scripts.js"></script>
-  <script type="module" src="js/admin/init.js"></script>
+  <script type="module" src="/js/admin/init.js"></script>
 </body>
 </html>

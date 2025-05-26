@@ -115,6 +115,16 @@ footer a:hover {
 .card .mt-auto {
   margin-top: auto;
 }
+.admin-tab {
+  display: block;
+}
+
+.admin-tab.hidden {
+  position: absolute;
+  left: -9999px;
+  opacity: 0;
+  pointer-events: none;
+}
 
 
 

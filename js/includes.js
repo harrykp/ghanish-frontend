@@ -7,8 +7,36 @@ async function loadInclude(id, url) {
     const res = await fetch(url);
     if (res.ok) {
       el.innerHTML = await res.text();
-      if (id === 'nav-placeholder' && typeof window.initGhanishUI === 'function') {
-        window.initGhanishUI(); // initialize nav-based logic after nav is injected
+
+      if (id === 'nav-placeholder') {
+        if (typeof window.initGhanishUI === 'function') {
+          window.initGhanishUI(); // optional global nav initializer
+        }
+
+        // 🔐 Toggle login/logout buttons based on token presence
+        const token = localStorage.getItem('token');
+        const loginLink = document.querySelector('#nav-login');
+        const logoutLink = document.querySelector('#nav-logout');
+
+        if (loginLink && logoutLink) {
+          if (token) {
+            loginLink.style.display = 'none';
+            logoutLink.style.display = 'inline-block';
+          } else {
+            loginLink.style.display = 'inline-block';
+            logoutLink.style.display = 'none';
+          }
+        }
+
+        // 🔁 Bind logout functionality
+        const logoutButton = document.getElementById('nav-logout');
+        if (logoutButton) {
+          logoutButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('token');
+            window.location.href = '/login.html';
+          });
+        }
       }
     } else {
       console.error(`Failed to load ${url}: ${res.status}`);

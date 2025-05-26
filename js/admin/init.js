@@ -1,12 +1,36 @@
 // public/js/admin/init.js
 
 const tabs = {
-  dashboard: () => import('./dashboard.js').then(mod => mod.initDashboardModule()),
-  orders: () => import('./orders.js').then(mod => mod.initOrdersModule()),
-  products: () => import('./products.js').then(mod => mod.initProductsModule()),
-  users: () => import('./users.js').then(mod => mod.initUsersModule()),
-  discounts: () => import('./discounts.js').then(mod => mod.initDiscountsModule()),
-  analytics: () => import('./analytics.js').then(mod => mod.initAnalyticsModule())
+  dashboard: async () => {
+    document.getElementById('dashboard-tab').classList.remove('d-none');
+    const mod = await import('./dashboard.js');
+    mod.initDashboardModule();
+  },
+  orders: async () => {
+    document.getElementById('orders-tab').classList.remove('d-none');
+    const mod = await import('./orders.js');
+    mod.initOrdersModule();
+  },
+  products: async () => {
+    document.getElementById('products-tab').classList.remove('d-none');
+    const mod = await import('./products.js');
+    mod.initProductsModule();
+  },
+  users: async () => {
+    document.getElementById('users-tab').classList.remove('d-none');
+    const mod = await import('./users.js');
+    mod.initUsersModule();
+  },
+  discounts: async () => {
+    document.getElementById('discounts-tab').classList.remove('d-none');
+    const mod = await import('./discounts.js');
+    mod.initDiscountsModule();
+  },
+  analytics: async () => {
+    document.getElementById('analytics-tab').classList.remove('d-none');
+    const mod = await import('./analytics.js');
+    mod.initAnalyticsModule();
+  }
 };
 
 function initTabRouting() {
@@ -29,20 +53,25 @@ function initTabRouting() {
 }
 
 function showTab(tabName) {
-  const sections = document.querySelectorAll('.admin-tab');
-  const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
+  // Hide all tab sections
+  document.querySelectorAll('.admin-tab').forEach(section => {
+    section.classList.add('d-none');
+  });
 
-  sections.forEach(section => section.classList.add('d-none'));
-  document.getElementById(`${tabName}-tab`)?.classList.remove('d-none');
+  // Deactivate all nav links
+  document.querySelectorAll('#admin-tabs a[data-tab]').forEach(link => {
+    link.classList.remove('active');
+  });
 
-  document.querySelectorAll('#admin-tabs a[data-tab]').forEach(link =>
-    link.classList.remove('active')
-  );
-  activeTab?.classList.add('active');
+  // Activate selected tab and nav link
+  const section = document.getElementById(`${tabName}-tab`);
+  const navLink = document.querySelector(`#admin-tabs a[data-tab="${tabName}"]`);
 
-  if (tabs[tabName]) {
-    tabs[tabName](); // dynamically import and initialize the module
-  }
+  if (section) section.classList.remove('d-none');
+  if (navLink) navLink.classList.add('active');
+
+  // Initialize module
+  if (tabs[tabName]) tabs[tabName]();
 }
 
 document.addEventListener('DOMContentLoaded', () => {

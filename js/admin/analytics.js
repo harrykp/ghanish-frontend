@@ -1,6 +1,7 @@
 // public/js/admin/analytics.js
 
-import { showLoading, showError, showToast } from './utils.js';
+import { showLoading, showError } from './utils.js';
+import { API_BASE } from './config.js';
 
 let revenueChart, topProductsChart;
 
@@ -9,26 +10,23 @@ async function fetchRevenueAnalytics() {
   showLoading(container);
 
   try {
-    const res = await fetch('/api/admin/revenue');
+    const res = await fetch(`${API_BASE}/api/admin/revenue`);
     const data = await res.json();
 
-    if (!data.success) {
-      showError(container, data.message || 'Failed to load revenue analytics.');
+    if (!data.labels || !data.values) {
+      showError(container, data.message || 'Failed to load revenue data.');
       return;
     }
 
-    renderRevenueChart(data.revenue);
+    renderRevenueChart(data.labels, data.values);
   } catch (err) {
-    showError(container, 'Error loading revenue data.');
+    showError(container, 'Error loading revenue analytics.');
   }
 }
 
-function renderRevenueChart(revenueData) {
+function renderRevenueChart(labels, values) {
   const ctx = document.getElementById('revenue-chart').getContext('2d');
   if (revenueChart) revenueChart.destroy();
-
-  const labels = revenueData.map(item => item.date);
-  const values = revenueData.map(item => item.total);
 
   revenueChart = new Chart(ctx, {
     type: 'bar',
@@ -55,26 +53,26 @@ async function fetchTopProductsAnalytics() {
   showLoading(container);
 
   try {
-    const res = await fetch('/api/admin/top-products');
+    const res = await fetch(`${API_BASE}/api/admin/top-products`);
     const data = await res.json();
 
-    if (!data.success) {
-      showError(container, data.message || 'Failed to load top products data.');
+    if (!Array.isArray(data.products)) {
+      showError(container, data.message || 'Failed to load top products.');
       return;
     }
 
-    renderTopProductsChart(data.products);
+    const labels = data.products.map(p => p.product_name);
+    const values = data.products.map(p => p.total_sold);
+
+    renderTopProductsChart(labels, values);
   } catch (err) {
-    showError(container, 'Error loading top products.');
+    showError(container, 'Error loading top products data.');
   }
 }
 
-function renderTopProductsChart(productsData) {
+function renderTopProductsChart(labels, values) {
   const ctx = document.getElementById('top-products-chart').getContext('2d');
   if (topProductsChart) topProductsChart.destroy();
-
-  const labels = productsData.map(p => p.product_name);
-  const values = productsData.map(p => p.total_sold);
 
   topProductsChart = new Chart(ctx, {
     type: 'doughnut',
@@ -84,15 +82,9 @@ function renderTopProductsChart(productsData) {
         label: 'Top Selling Products',
         data: values,
         backgroundColor: [
-          '#4dc9f6',
-          '#f67019',
-          '#f53794',
-          '#537bc4',
-          '#acc236',
-          '#166a8f',
-          '#00a950',
-          '#58595b',
-          '#8549ba'
+          '#4dc9f6', '#f67019', '#f53794',
+          '#537bc4', '#acc236', '#166a8f',
+          '#00a950', '#58595b', '#8549ba'
         ]
       }]
     },

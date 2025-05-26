@@ -67,7 +67,7 @@ window.copyToClipboard = function(text) {
   }).catch(() => {
     showToast('Failed to copy', 'danger');
   });
-// === Admin Page Guard ===
+};// === Admin Page Guard ===
 window.requireAdmin = function () {
   const token = localStorage.getItem('token');
 

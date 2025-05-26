@@ -1,136 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard</title>
 
-  <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="/css/styles.css" />
-  <style>
-    .admin-tab { display: block; }
-    .admin-tab.hidden {
-      position: absolute;
-      left: -9999px;
-      opacity: 0;
-      pointer-events: none;
-    }
-  </style>
-
-  <!-- Chart.js -->
+  <link rel="stylesheet" href="/css/styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <!-- Nav Include -->
+  <!-- Admin Nav -->
   <div id="nav-placeholder"></div>
 
-  <header class="container py-3">
-    <h1>Admin Dashboard</h1>
-    <nav id="admin-tabs" class="nav nav-tabs">
-      <a href="#dashboard" data-tab="dashboard" class="nav-link active">Dashboard</a>
-      <a href="#orders" data-tab="orders" class="nav-link">Orders</a>
-      <a href="#products" data-tab="products" class="nav-link">Products</a>
-      <a href="#users" data-tab="users" class="nav-link">Users</a>
-      <a href="#discounts" data-tab="discounts" class="nav-link">Discounts</a>
-      <a href="#analytics" data-tab="analytics" class="nav-link">Analytics</a>
-    </nav>
-  </header>
-
   <main class="container py-4">
-    <!-- Dashboard Tab -->
-    <section id="dashboard-tab" class="admin-tab">
-      <h2>Dashboard Overview</h2>
-      <div id="dashboard-stats"></div>
-    </section>
-
-    <!-- Orders Tab -->
-    <section id="orders-tab" class="admin-tab hidden">
-      <h2>Orders</h2>
-      <div id="orders-container"></div>
-      <div id="orders-pagination" class="pagination mt-3"></div>
-      <div id="order-details-modal" class="modal" tabindex="-1">
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Order Details</h5>
-              <button type="button" class="btn-close close" aria-label="Close"></button>
-            </div>
-            <div class="modal-body"></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Products Tab -->
-    <section id="products-tab" class="admin-tab hidden">
-      <h2>Products</h2>
-      <form id="product-form" class="mb-4">
-        <input type="hidden" name="product-id" />
-        <input type="text" name="product-name" placeholder="Product Name" required class="form-control mb-2" />
-        <input type="number" name="product-price" placeholder="Price" step="0.01" required class="form-control mb-2" />
-        <input type="text" name="product-category" placeholder="Category" class="form-control mb-2" />
-        <button type="submit" class="btn btn-primary">Save Product</button>
-      </form>
-      <div id="products-container"></div>
-    </section>
-
-    <!-- Users Tab -->
-    <section id="users-tab" class="admin-tab hidden">
-      <h2>Users</h2>
-      <form id="user-form" class="mb-4">
-        <input type="hidden" name="user-id" />
-        <input type="text" name="full-name" placeholder="Full Name" required class="form-control mb-2" />
-        <input type="email" name="email" placeholder="Email" required class="form-control mb-2" />
-        <select name="role" required class="form-control mb-2">
-          <option value="">Select Role</option>
-          <option value="admin">Admin</option>
-          <option value="customer">Customer</option>
-        </select>
-        <button type="submit" class="btn btn-primary">Save User</button>
-      </form>
-      <div id="users-container"></div>
-    </section>
-
-    <!-- Discounts Tab -->
-    <section id="discounts-tab" class="admin-tab hidden">
-      <h2>Discount Codes</h2>
-      <form id="discount-form" class="mb-4">
-        <input type="hidden" name="discount-id" />
-        <input type="text" name="code" placeholder="Discount Code" required class="form-control mb-2" />
-        <select name="type" required class="form-control mb-2">
-          <option value="">Select Type</option>
-          <option value="percent">Percentage</option>
-          <option value="fixed">Fixed Amount</option>
-        </select>
-        <input type="number" name="value" placeholder="Value" required class="form-control mb-2" />
-        <input type="date" name="expiry-date" class="form-control mb-2" />
-        <button type="submit" class="btn btn-primary">Save Discount</button>
-      </form>
-      <div id="discounts-container"></div>
-    </section>
-
-    <!-- ✅ Final: Analytics Tab with canvas elements -->
-    <section id="analytics-tab" class="admin-tab hidden">
-      <h2>Analytics</h2>
-
-      <div id="revenue-chart-container" class="mb-4">
-        <canvas id="revenue-chart" width="400" height="200"></canvas>
-      </div>
-
-      <div id="top-products-chart-container">
-        <canvas id="top-products-chart" width="400" height="200"></canvas>
-      </div>
-    </section>
+    <h2>Dashboard Overview</h2>
+    <div class="row" id="dashboard-stats">
+      <!-- Stats cards will be inserted here -->
+    </div>
   </main>
 
-  <!-- Footer Include -->
   <div id="footer-placeholder"></div>
 
-  <!-- Scripts -->
+  <!-- Includes + Admin JS -->
   <script src="/js/includes.js"></script>
-  <script type="module" src="/js/admin/init.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/admin.js"></script>
 </body>
 </html>

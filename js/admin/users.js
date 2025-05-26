@@ -6,21 +6,23 @@ import {
   showToast,
   delegate
 } from './utils.js';
+import { API_BASE } from './config.js';
 
 async function fetchUsers() {
   const container = document.getElementById('users-container');
   showLoading(container);
 
   try {
-    const res = await fetch('/api/users');
+    const res = await fetch(`${API_BASE}/api/admin/users`);
     const data = await res.json();
 
-    if (!data.success) {
+    if (!data.users && !Array.isArray(data)) {
       showError(container, data.message || 'Failed to load users.');
       return;
     }
 
-    renderUsers(data.users);
+    const users = data.users || data;
+    renderUsers(users);
   } catch (err) {
     showError(container, 'Error loading users.');
   }
@@ -52,17 +54,17 @@ async function deleteUser(userId) {
   if (!confirm('Are you sure you want to delete this user?')) return;
 
   try {
-    const res = await fetch(`/api/users/${userId}`, {
+    const res = await fetch(`${API_BASE}/api/admin/users/${userId}`, {
       method: 'DELETE'
     });
 
     const data = await res.json();
 
-    if (data.success) {
+    if (data.message) {
       showToast('success', 'User deleted.');
       fetchUsers();
     } else {
-      showToast('error', data.message || 'Failed to delete user.');
+      showToast('error', data.error || 'Failed to delete user.');
     }
   } catch (err) {
     showToast('error', 'Error deleting user.');
@@ -70,19 +72,24 @@ async function deleteUser(userId) {
 }
 
 async function resetUserPassword(userId) {
-  if (!confirm('Reset password for this user?')) return;
+  const newPassword = prompt('Enter new password (min 6 chars):');
+  if (!newPassword || newPassword.length < 6) {
+    return showToast('error', 'Password must be at least 6 characters.');
+  }
 
   try {
-    const res = await fetch(`/api/users/${userId}/reset-password`, {
-      method: 'POST'
+    const res = await fetch(`${API_BASE}/api/admin/users/${userId}/reset-password`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ newPassword })
     });
 
     const data = await res.json();
 
-    if (data.success) {
-      showToast('success', 'Password reset email sent.');
+    if (data.message) {
+      showToast('success', 'Password reset successfully.');
     } else {
-      showToast('error', data.message || 'Failed to reset password.');
+      showToast('error', data.error || 'Failed to reset password.');
     }
   } catch (err) {
     showToast('error', 'Error resetting password.');
@@ -91,13 +98,13 @@ async function resetUserPassword(userId) {
 
 async function fetchUserById(userId) {
   try {
-    const res = await fetch(`/api/users/${userId}`);
+    const res = await fetch(`${API_BASE}/api/admin/users`);
     const data = await res.json();
-
-    if (data.success) {
-      populateEditForm(data.user);
+    const user = (data.users || data).find(u => u.id === parseInt(userId));
+    if (user) {
+      populateEditForm(user);
     } else {
-      showToast('error', 'Failed to fetch user data.');
+      showToast('error', 'User not found.');
     }
   } catch (err) {
     showToast('error', 'Error fetching user.');
@@ -123,7 +130,7 @@ async function handleUserFormSubmit(e) {
 
   const payload = { full_name, email, role };
   const method = id ? 'PUT' : 'POST';
-  const url = id ? `/api/users/${id}` : '/api/users';
+  const url = id ? `${API_BASE}/api/admin/users/${id}` : `${API_BASE}/api/admin/users`;
 
   try {
     const res = await fetch(url, {
@@ -134,12 +141,12 @@ async function handleUserFormSubmit(e) {
 
     const data = await res.json();
 
-    if (data.success) {
+    if (data.message || data.id) {
       showToast('success', `User ${id ? 'updated' : 'created'} successfully.`);
       form.reset();
       fetchUsers();
     } else {
-      showToast('error', data.message || 'Failed to save user.');
+      showToast('error', data.error || 'Failed to save user.');
     }
   } catch (err) {
     showToast('error', 'Error saving user.');

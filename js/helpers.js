@@ -67,4 +67,26 @@ window.copyToClipboard = function(text) {
   }).catch(() => {
     showToast('Failed to copy', 'danger');
   });
+// === Admin Page Guard ===
+window.requireAdmin = function () {
+  const token = localStorage.getItem('token');
+
+  if (!token) {
+    window.location.href = '/login.html';
+    return;
+  }
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    const role = payload.role;
+
+    if (role !== 'admin') {
+      window.location.href = '/index.html';
+    }
+  } catch (err) {
+    console.error('Invalid token. Redirecting to login.');
+    window.location.href = '/login.html';
+  }
+};
+
 };

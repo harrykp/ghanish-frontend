@@ -26,10 +26,17 @@ const tabs = {
     const mod = await import('./discounts.js');
     mod.initDiscountsModule();
   },
-  analytics: async () => {
-    document.getElementById('analytics-tab').classList.remove('hidden');
-    const mod = await import('./analytics.js');
-    mod.initAnalyticsModule();
+  analytics: () => {
+    const section = document.getElementById('analytics-tab');
+    section.classList.remove('hidden');
+
+    // Ensure DOM paints the visible canvas before initAnalyticsModule runs
+    requestAnimationFrame(() => {
+      setTimeout(async () => {
+        const mod = await import('./analytics.js');
+        mod.initAnalyticsModule();
+      }, 50);
+    });
   }
 };
 

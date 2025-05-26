@@ -1,5 +1,3 @@
-// public/js/admin/orders.js
-
 import {
   showLoading,
   showError,
@@ -8,6 +6,7 @@ import {
   delegate,
   showToast
 } from './utils.js';
+import { API_BASE } from './config.js';
 
 let currentPage = 1;
 const ordersPerPage = 10;
@@ -17,16 +16,16 @@ async function fetchOrders(page = 1) {
   showLoading(container);
 
   try {
-    const res = await fetch(`/api/orders/all?page=${page}&limit=${ordersPerPage}`);
+    const res = await fetch(`${API_BASE}/api/orders/all?page=${page}&limit=${ordersPerPage}`);
     const data = await res.json();
 
-    if (!data.success) {
+    if (!data.success && !Array.isArray(data.orders)) {
       showError(container, data.message || 'Failed to load orders.');
       return;
     }
 
     renderOrders(data.orders);
-    renderPagination(data.totalPages, data.currentPage);
+    renderPagination(data.totalPages || 1, data.currentPage || 1);
   } catch (err) {
     showError(container, 'Error loading orders.');
   }
@@ -44,7 +43,7 @@ function renderOrders(orders) {
   const html = orders.map(order => `
     <div class="order-card">
       <p><strong>Order ID:</strong> ${order.id}</p>
-      <p><strong>Customer:</strong> ${order.customer_name}</p>
+      <p><strong>Customer:</strong> ${order.full_name}</p>
       <p><strong>Total:</strong> ${formatCurrency(order.total)}</p>
       <p><strong>Status:</strong> ${order.status}</p>
       <button class="btn btn-primary view-order" data-id="${order.id}">View</button>
@@ -59,7 +58,6 @@ function renderPagination(totalPages, current) {
   if (!nav) return;
 
   let html = '';
-
   for (let i = 1; i <= totalPages; i++) {
     html += `<button class="page-btn ${i === current ? 'active' : ''}" data-page="${i}">${i}</button>`;
   }
@@ -69,11 +67,11 @@ function renderPagination(totalPages, current) {
 
 async function fetchOrderDetails(orderId) {
   try {
-    const res = await fetch(`/api/orders/${orderId}`);
+    const res = await fetch(`${API_BASE}/api/orders/${orderId}/admin`);
     const data = await res.json();
 
-    if (data.success) {
-      showOrderModal(data.order);
+    if (data.id) {
+      showOrderModal(data);
     } else {
       showToast('error', 'Failed to load order details.');
     }
@@ -88,8 +86,6 @@ function showOrderModal(order) {
 
   content.innerHTML = `
     <h4>Order #${order.id}</h4>
-    <p><strong>Name:</strong> ${order.customer_name}</p>
-    <p><strong>Email:</strong> ${order.customer_email}</p>
     <p><strong>Total:</strong> ${formatCurrency(order.total)}</p>
     <p><strong>Status:</strong> ${order.status}</p>
     <p><strong>Date:</strong> ${formatDate(order.created_at)}</p>

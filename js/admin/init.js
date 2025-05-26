@@ -26,10 +26,13 @@ const tabs = {
     const mod = await import('./discounts.js');
     mod.initDiscountsModule();
   },
-  analytics: async () => {
+  analytics: () => {
     document.getElementById('analytics-tab').classList.remove('d-none');
-    const mod = await import('./analytics.js');
-    mod.initAnalyticsModule();
+    // Delay to ensure canvas elements render before getContext() is called
+    setTimeout(async () => {
+      const mod = await import('./analytics.js');
+      mod.initAnalyticsModule();
+    }, 100);
   }
 };
 
@@ -47,30 +50,25 @@ function initTabRouting() {
     });
   });
 
-  // Load tab from hash or default to dashboard
   const defaultTab = window.location.hash.replace('#', '') || 'dashboard';
   showTab(defaultTab);
 }
 
 function showTab(tabName) {
-  // Hide all tab sections
-  document.querySelectorAll('.admin-tab').forEach(section => {
-    section.classList.add('d-none');
-  });
+  document.querySelectorAll('.admin-tab').forEach(section =>
+    section.classList.add('d-none')
+  );
 
-  // Deactivate all nav links
-  document.querySelectorAll('#admin-tabs a[data-tab]').forEach(link => {
-    link.classList.remove('active');
-  });
+  document.querySelectorAll('#admin-tabs a[data-tab]').forEach(link =>
+    link.classList.remove('active')
+  );
 
-  // Activate selected tab and nav link
   const section = document.getElementById(`${tabName}-tab`);
   const navLink = document.querySelector(`#admin-tabs a[data-tab="${tabName}"]`);
 
   if (section) section.classList.remove('d-none');
   if (navLink) navLink.classList.add('active');
 
-  // Initialize module
   if (tabs[tabName]) tabs[tabName]();
 }
 

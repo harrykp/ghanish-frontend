@@ -13,80 +13,89 @@
 <script>
   requireAdmin();
 </script>
-  <!-- Admin Navigation -->
-  <div id="nav-placeholder"></div>
 
-  <section class="py-5">
-    <div class="container">
-      <h2 class="mb-4 text-center">Manage Products</h2>
+<!-- Admin Navigation -->
+<div id="nav-placeholder"></div>
 
-      <div class="d-flex justify-content-between align-items-center mb-3">
-        <h5 class="mb-0">Product List</h5>
-        <button class="btn btn-primary" onclick="showProductForm()">+ New Product</button>
+<section class="py-5">
+  <div class="container">
+    <h2 class="mb-4 text-center">Manage Products</h2>
+
+    <!-- ✅ Top Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <input type="text" class="form-control me-3" id="productSearchInput" style="max-width: 300px;" placeholder="Search name or category..." />
+      <div>
+        <button class="btn btn-outline-secondary me-2" onclick="exportProductsToCSV()">Export CSV</button>
+        <button class="btn btn-danger" onclick="showProductForm()">+ New Product</button>
+      </div>
+    </div>
+
+    <!-- ✅ Product Table -->
+    <div id="productList" class="mb-4"></div>
+
+    <!-- ✅ Pagination -->
+    <nav class="mt-4">
+      <ul class="pagination justify-content-center" id="productPagination"></ul>
+    </nav>
+
+    <!-- ✅ Product Form -->
+    <form id="productForm" class="border p-3 d-none" onsubmit="saveProduct(event)">
+      <h6 class="mb-3" id="productFormTitle">New Product</h6>
+      <input type="hidden" id="productId" />
+
+      <div class="mb-2">
+        <label for="productName" class="form-label">Product Name</label>
+        <input type="text" id="productName" class="form-control" required />
       </div>
 
-      <div id="productList" class="mb-4"></div>
+      <div class="mb-2">
+        <label for="productDesc" class="form-label">Description</label>
+        <textarea id="productDesc" class="form-control"></textarea>
+      </div>
 
-      <!-- Product Form -->
-      <form id="productForm" class="border p-3 d-none" onsubmit="saveProduct(event)">
-        <h6 class="mb-3" id="productFormTitle">New Product</h6>
-        <input type="hidden" id="productId" />
+      <div class="mb-2">
+        <label for="productPrice" class="form-label">Price (USD)</label>
+        <input type="number" id="productPrice" class="form-control" step="0.01" required />
+      </div>
 
-        <div class="mb-2">
-          <label for="productName" class="form-label">Product Name</label>
-          <input type="text" id="productName" class="form-control" required />
+      <div class="mb-2">
+        <label for="productStock" class="form-label">Stock</label>
+        <input type="number" id="productStock" class="form-control" step="1" min="0" required />
+      </div>
+
+      <div class="mb-2">
+        <label for="productCategory" class="form-label">Category</label>
+        <select id="productCategory" class="form-select" required>
+          <option value="">Select Category</option>
+          <option value="Shrimp">Shrimp</option>
+          <option value="Fish">Fish</option>
+          <option value="Seasoning">Seasoning</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="productImage" class="form-label">Image URL</label>
+        <input type="url" id="productImage" class="form-control" oninput="updateImagePreview()" />
+        <div class="mt-2">
+          <img id="imagePreview" src="" alt="" class="img-fluid border d-none" style="max-height: 200px;" />
         </div>
+      </div>
 
-        <div class="mb-2">
-          <label for="productDesc" class="form-label">Description</label>
-          <textarea id="productDesc" class="form-control"></textarea>
-        </div>
+      <div class="d-flex justify-content-between">
+        <button type="submit" class="btn btn-success">Save Product</button>
+        <button type="button" class="btn btn-secondary" onclick="hideProductForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+</section>
 
-        <div class="mb-2">
-          <label for="productPrice" class="form-label">Price (USD)</label>
-          <input type="number" id="productPrice" class="form-control" step="0.01" required />
-        </div>
+<!-- Footer -->
+<div id="footer-placeholder"></div>
 
-        <div class="mb-2">
-          <label for="productStock" class="form-label">Stock</label>
-          <input type="number" id="productStock" class="form-control" step="1" min="0" required />
-        </div>
-
-        <div class="mb-2">
-          <label for="productCategory" class="form-label">Category</label>
-          <select id="productCategory" class="form-select" required>
-            <option value="">Select Category</option>
-            <option value="Shrimp">Shrimp</option>
-            <option value="Fish">Fish</option>
-            <option value="Seasoning">Seasoning</option>
-          </select>
-        </div>
-
-        <div class="mb-3">
-          <label for="productImage" class="form-label">Image URL</label>
-          <input type="url" id="productImage" class="form-control" oninput="updateImagePreview()" />
-          <div class="mt-2">
-            <img id="imagePreview" src="" alt="" class="img-fluid border d-none" style="max-height: 200px;" />
-          </div>
-        </div>
-
-        <div class="d-flex justify-content-between">
-          <button type="submit" class="btn btn-success">Save Product</button>
-          <button type="button" class="btn btn-secondary" onclick="hideProductForm()">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <div id="footer-placeholder"></div>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
-  <script src="/js/includes.js"></script>
-  <script src="/js/admin-base.js"></script>
-  <script src="/js/admin-products.js"></script>
-
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="/js/includes.js"></script>
+<script src="/js/admin-base.js"></script>
+<script src="/js/admin-products.js"></script>
 </body>
 </html>

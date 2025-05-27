@@ -1,14 +1,23 @@
 // === Admin Orders Page ===
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (location.pathname === '/admin-orders.html') {
-    fetchOrders();
-  }
-});
-
 let allOrders = [];
 let currentOrderPage = 1;
 const ordersPerPage = 10;
+let currentFilter = '';
+
+document.addEventListener('DOMContentLoaded', () => {
+  if (location.pathname === '/admin-orders.html') {
+    fetchOrders();
+
+    const filterInput = document.getElementById('orderFilterInput');
+    if (filterInput) {
+      filterInput.addEventListener('input', () => {
+        currentFilter = filterInput.value.trim().toLowerCase();
+        renderFilteredOrders();
+      });
+    }
+  }
+});
 
 function fetchOrders(page = 1) {
   currentOrderPage = page;
@@ -16,8 +25,16 @@ function fetchOrders(page = 1) {
     .then(r => r.json())
     .then(data => {
       allOrders = data.orders || [];
-      renderOrderTable(allOrders, page, data.total);
+      renderFilteredOrders();
     });
+}
+
+function renderFilteredOrders() {
+  const filtered = currentFilter
+    ? allOrders.filter(o => o.status.toLowerCase().includes(currentFilter))
+    : allOrders;
+
+  renderOrderTable(filtered, currentOrderPage, filtered.length);
 }
 
 function renderOrderTable(orders, currentPage, totalOrders) {
@@ -86,10 +103,20 @@ window.viewOrderDetails = function (id, name, phone, status, date, total) {
       modal.show();
     });
 };
+
 window.exportOrdersToCSV = function () {
+  const filtered = currentFilter
+    ? allOrders.filter(o => o.status.toLowerCase().includes(currentFilter))
+    : allOrders;
+
+  if (!filtered.length) {
+    showToast('No orders to export.', 'warning');
+    return;
+  }
+
   const rows = [
     ['Order ID', 'Name', 'Phone', 'Total', 'Status', 'Created At'],
-    ...allOrders.map(o => [
+    ...filtered.map(o => [
       o.id,
       o.full_name || '-',
       o.phone || '-',
@@ -139,4 +166,3 @@ window.printOrderModal = function () {
     printWindow.close();
   }, 500);
 };
-

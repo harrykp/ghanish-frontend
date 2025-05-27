@@ -1,8 +1,22 @@
-// === Admin Products Page ===
+let allProducts = [];
+let filteredProducts = [];
+let currentProductPage = 1;
+const productsPerPage = 10;
 
 document.addEventListener('DOMContentLoaded', () => {
   if (location.pathname === '/admin-products.html') {
     fetchProducts();
+
+    const searchInput = document.getElementById('productSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.toLowerCase();
+        filteredProducts = allProducts.filter(p =>
+          (p.name + p.category).toLowerCase().includes(query)
+        );
+        renderProductTable(currentProductPage);
+      });
+    }
   }
 });
 
@@ -10,56 +24,102 @@ window.fetchProducts = function () {
   fetch(`${API_URL}/api/products`, { headers })
     .then(r => r.json())
     .then(products => {
-      const list = document.getElementById('productList');
-      if (!list) return;
-      list.innerHTML = products.map(p => `
-        <div class="card mb-2">
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <div>
-              <strong>${p.name}</strong><br/>
-              <small>${p.category}</small><br/>
-              <small>USD ${parseFloat(p.price).toFixed(2)}</small>
-            </div>
-            <div>
-              <button class="btn btn-sm btn-outline-primary me-2" onclick="showProductForm(${p.id})">Edit</button>
-              <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})">Delete</button>
-            </div>
-          </div>
-        </div>
-      `).join('');
+      allProducts = products || [];
+      filteredProducts = allProducts;
+      renderProductTable(1);
     });
 };
 
-window.saveProduct = function (e) {
-  e.preventDefault();
+function renderProductTable(page) {
+  currentProductPage = page;
+  const start = (page - 1) * productsPerPage;
+  const end = start + productsPerPage;
+  const pageItems = filteredProducts.slice(start, end);
 
-  const id = document.getElementById('productId').value;
-  const name = document.getElementById('productName').value;
-  const description = document.getElementById('productDesc').value;
-  const price = document.getElementById('productPrice').value;
-  const stock = document.getElementById('productStock').value;
-  const category = document.getElementById('productCategory').value;
-  const image_url = document.getElementById('productImage').value;
+  const list = document.getElementById('productList');
+  if (!list) return;
 
-  const payload = { name, description, price, stock, category, image_url };
-  const method = id ? 'PUT' : 'POST';
-  const url = id ? `${API_URL}/api/products/${id}` : `${API_URL}/api/products`;
+  list.innerHTML = `
+    <table class="table table-bordered">
+      <thead><tr><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th></tr></thead>
+      <tbody>
+        ${pageItems.map(p => `
+          <tr>
+            <td>${p.name}</td>
+            <td>${p.category}</td>
+            <td>USD ${parseFloat(p.price).toFixed(2)}</td>
+            <td>${p.stock}</td>
+            <td>
+              <button class="btn btn-sm btn-outline-primary me-2" onclick="showProductForm(${p.id})">Edit</button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteProduct(${p.id})">Delete</button>
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
 
-  fetch(url, {
-    method,
-    headers,
-    body: JSON.stringify(payload)
-  }).then(() => {
-    hideProductForm();
-    fetchProducts();
-  });
+  renderPagination('productPagination', filteredProducts.length, productsPerPage, currentProductPage, renderProductTable);
+}
+
+function renderPagination(containerId, totalItems, perPage, currentPage, onPageChange) {
+  const totalPages = Math.ceil(totalItems / perPage);
+  const pagination = document.getElementById(containerId);
+  if (!pagination) return;
+
+  let html = '';
+  html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="${onPageChange.name}(${currentPage - 1})">Previous</a>
+  </li>`;
+
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+      <a class="page-link" href="#" onclick="${onPageChange.name}(${i})">${i}</a>
+    </li>`;
+  }
+
+  html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+    <a class="page-link" href="#" onclick="${onPageChange.name}(${currentPage + 1})">Next</a>
+  </li>`;
+
+  pagination.innerHTML = html;
+}
+
+window.exportProductsToCSV = function () {
+  if (!filteredProducts.length) {
+    showToast('No products to export.', 'warning');
+    return;
+  }
+
+  const rows = [
+    ['Name', 'Category', 'Price', 'Stock'],
+    ...filteredProducts.map(p => [
+      p.name,
+      p.category,
+      parseFloat(p.price).toFixed(2),
+      p.stock
+    ])
+  ];
+
+  const csv = rows.map(r => r.map(cell => `"${cell}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `products-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 };
 
 window.showProductForm = function (id) {
   const form = document.getElementById('productForm');
   if (!form) return;
   form.reset();
+  document.getElementById('productFormTitle').textContent = id ? 'Edit Product' : 'New Product';
   form.classList.remove('d-none');
+
   if (typeof id === 'number') {
     fetch(`${API_URL}/api/products`, { headers })
       .then(r => r.json())
@@ -99,4 +159,29 @@ window.deleteProduct = function (id) {
     method: 'DELETE',
     headers
   }).then(() => fetchProducts());
+};
+
+window.saveProduct = function (e) {
+  e.preventDefault();
+
+  const id = document.getElementById('productId').value;
+  const name = document.getElementById('productName').value;
+  const description = document.getElementById('productDesc').value;
+  const price = document.getElementById('productPrice').value;
+  const stock = document.getElementById('productStock').value;
+  const category = document.getElementById('productCategory').value;
+  const image_url = document.getElementById('productImage').value;
+
+  const payload = { name, description, price, stock, category, image_url };
+  const method = id ? 'PUT' : 'POST';
+  const url = id ? `${API_URL}/api/products/${id}` : `${API_URL}/api/products`;
+
+  fetch(url, {
+    method,
+    headers,
+    body: JSON.stringify(payload)
+  }).then(() => {
+    hideProductForm();
+    fetchProducts();
+  });
 };

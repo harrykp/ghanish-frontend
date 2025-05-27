@@ -111,5 +111,3 @@ window.exportOrdersToCSV = function () {
   URL.revokeObjectURL(url);
 };
 
-
-};

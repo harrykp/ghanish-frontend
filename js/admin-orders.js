@@ -30,9 +30,13 @@ function fetchOrders(page = 1) {
 }
 
 function renderFilteredOrders() {
-  const filtered = currentFilter
-    ? allOrders.filter(o => o.status.toLowerCase().includes(currentFilter))
-    : allOrders;
+const filtered = currentFilter
+  ? allOrders.filter(o =>
+      (o.status || '').toLowerCase().includes(currentFilter) ||
+      (o.full_name || '').toLowerCase().includes(currentFilter) ||
+      (o.phone || '').toLowerCase().includes(currentFilter)
+    )
+  : allOrders;
 
   renderOrderTable(filtered, currentOrderPage, filtered.length);
 }

@@ -139,3 +139,4 @@ window.printOrderModal = function () {
     printWindow.close();
   }, 500);
 };
+

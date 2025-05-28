@@ -2,58 +2,87 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Ghanish Blog</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Blog – Ghanish</title>
   <link rel="icon" href="images/ghanish-logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="/css/styles.css" rel="stylesheet" />
+  <link href="css/styles.css" rel="stylesheet" />
 </head>
 <body>
   <div id="nav-placeholder"></div>
 
   <section class="py-5">
     <div class="container">
-      <h2 class="text-center mb-4">Latest Articles</h2>
-      <div class="row" id="blogGrid"></div>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Latest Blog Posts</h2>
+        <select id="categoryFilter" class="form-select w-auto">
+          <option value="">All Categories</option>
+        </select>
+      </div>
+
+      <div id="blogGrid" class="row g-4"></div>
     </div>
   </section>
 
   <div id="footer-placeholder"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/includes.js"></script>
-  <script src="/js/scripts.js"></script>
+  <script src="js/includes.js"></script>
+  <script src="js/scripts.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-      const grid = document.getElementById('blogGrid');
+    const API_URL = 'https://ghanish-backend.onrender.com';
+
+    let allBlogs = [];
+
+    async function fetchBlogs(category = '') {
       try {
-        const res = await fetch(`${API_URL}/api/blogs`);
+        const url = category ? `${API_URL}/api/blogs?category=${encodeURIComponent(category)}` : `${API_URL}/api/blogs`;
+        const res = await fetch(url);
         const blogs = await res.json();
-
-        if (!blogs.length) {
-          grid.innerHTML = '<p class="text-center text-muted">No blogs found.</p>';
-          return;
-        }
-
-        blogs.forEach(blog => {
-          const col = document.createElement('div');
-          col.className = 'col-md-6 col-lg-4 mb-4';
-          col.innerHTML = `
-            <div class="card h-100 shadow-sm">
-              ${blog.image_url ? `<img src="${blog.image_url}" class="card-img-top" alt="${blog.title}">` : ''}
-              <div class="card-body d-flex flex-column">
-                <h5 class="card-title">${blog.title}</h5>
-                <p class="card-text text-muted">${new Date(blog.created_at).toLocaleDateString()}</p>
-                <a href="blog-detail.html?slug=${encodeURIComponent(blog.slug)}" class="btn btn-outline-primary mt-auto">Read More</a>
-              </div>
-            </div>
-          `;
-          grid.appendChild(col);
-        });
+        allBlogs = blogs;
+        renderBlogGrid(blogs);
+        populateCategories(blogs);
       } catch (err) {
-        console.error('Error loading blogs:', err);
-        grid.innerHTML = '<p class="text-center text-danger">Failed to load blogs.</p>';
+        console.error(err);
+        document.getElementById('blogGrid').innerHTML = '<p class="text-danger text-center">Failed to load blog posts.</p>';
       }
+    }
+
+    function populateCategories(blogs) {
+      const select = document.getElementById('categoryFilter');
+      const categories = Array.from(new Set(blogs.map(b => b.category).filter(Boolean))).sort();
+
+      select.innerHTML = `<option value="">All Categories</option>` +
+        categories.map(c => `<option value="${c}">${c}</option>`).join('');
+
+      select.addEventListener('change', () => {
+        fetchBlogs(select.value);
+      });
+    }
+
+    function renderBlogGrid(blogs) {
+      const grid = document.getElementById('blogGrid');
+      if (!blogs.length) {
+        grid.innerHTML = '<p class="text-muted text-center">No blog posts found.</p>';
+        return;
+      }
+
+      grid.innerHTML = blogs.map(blog => `
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 shadow-sm">
+            ${blog.image_url ? `<img src="${blog.image_url}" class="card-img-top" alt="${blog.title}">` : ''}
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">${blog.title}</h5>
+              <p class="text-muted">${new Date(blog.created_at).toLocaleDateString()}</p>
+              <a href="blog-detail.html?slug=${encodeURIComponent(blog.slug)}" class="btn btn-outline-primary mt-auto">Read More</a>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchBlogs();
     });
   </script>
 </body>

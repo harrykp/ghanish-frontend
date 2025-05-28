@@ -1,53 +1,48 @@
-// === Admin Blog Management ===
-
 document.addEventListener('DOMContentLoaded', () => {
   if (location.pathname === '/admin-blogs.html') {
     fetchBlogs();
-    initTinyMCE();
-    document.getElementById('blogTitle').addEventListener('input', generateSlug);
   }
 });
 
-let currentBlogs = [];
+const API_URL = 'https://ghanish-backend.onrender.com';
+const token = localStorage.getItem('token');
+const headers = {
+  'Authorization': `Bearer ${token}`,
+  'Content-Type': 'application/json'
+};
+
+let allBlogs = [];
 
 function fetchBlogs() {
-  fetch(`${API_URL}/api/blogs`)
+  fetch(`${API_URL}/api/blogs`, { headers })
     .then(r => r.json())
     .then(data => {
-      currentBlogs = data;
-      renderBlogList(data);
+      allBlogs = data || [];
+      renderBlogList();
     });
 }
 
-function renderBlogList(blogs) {
+function renderBlogList() {
   const list = document.getElementById('blogList');
   if (!list) return;
-  if (!blogs.length) {
-    list.innerHTML = `<p class="text-muted">No blogs yet.</p>`;
+
+  if (allBlogs.length === 0) {
+    list.innerHTML = `<p class="text-muted">No blog posts found.</p>`;
     return;
   }
 
   list.innerHTML = `
-    <table class="table table-striped">
-      <thead>
-        <tr>
-          <th>Title</th>
-          <th>Slug</th>
-          <th>Image</th>
-          <th>Date</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+    <table class="table table-bordered table-striped">
+      <thead><tr><th>Title</th><th>Category</th><th>Created At</th><th>Actions</th></tr></thead>
       <tbody>
-        ${blogs.map(b => `
+        ${allBlogs.map(blog => `
           <tr>
-            <td>${b.title}</td>
-            <td>${b.slug}</td>
-            <td>${b.image_url ? `<img src="${b.image_url}" alt="" style="height: 40px;">` : '—'}</td>
-            <td>${new Date(b.created_at).toLocaleDateString()}</td>
+            <td>${blog.title}</td>
+            <td>${blog.category || '—'}</td>
+            <td>${new Date(blog.created_at).toLocaleDateString()}</td>
             <td>
-              <button class="btn btn-sm btn-info me-2" onclick="editBlog(${b.id})">Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="deleteBlog(${b.id})">Delete</button>
+              <button class="btn btn-sm btn-primary me-2" onclick="editBlog(${blog.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteBlog(${blog.id})">Delete</button>
             </td>
           </tr>
         `).join('')}
@@ -56,10 +51,9 @@ function renderBlogList(blogs) {
 }
 
 window.showBlogForm = function () {
-  document.getElementById('blogFormTitle').textContent = 'New Blog';
   document.getElementById('blogForm').reset();
-  tinymce.get('blogContent')?.setContent('');
   document.getElementById('blogId').value = '';
+  document.getElementById('blogFormTitle').textContent = 'New Blog Post';
   document.getElementById('blogForm').classList.remove('d-none');
 };
 
@@ -67,73 +61,51 @@ window.hideBlogForm = function () {
   document.getElementById('blogForm').classList.add('d-none');
 };
 
-window.editBlog = function (id) {
-  const blog = currentBlogs.find(b => b.id === id);
-  if (!blog) return;
-
-  document.getElementById('blogId').value = blog.id;
-  document.getElementById('blogTitle').value = blog.title;
-  document.getElementById('blogSlug').value = blog.slug;
-  document.getElementById('blogImage').value = blog.image_url;
-  tinymce.get('blogContent')?.setContent(blog.content || '');
-
-  document.getElementById('blogFormTitle').textContent = 'Edit Blog';
-  document.getElementById('blogForm').classList.remove('d-none');
-};
-
-window.deleteBlog = function (id) {
-  if (!confirm('Delete this blog post?')) return;
-  fetch(`${API_URL}/api/blogs/${id}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-  }).then(() => fetchBlogs());
-};
-
 window.saveBlog = function (e) {
   e.preventDefault();
 
   const id = document.getElementById('blogId').value;
   const title = document.getElementById('blogTitle').value.trim();
-  const slug = document.getElementById('blogSlug').value.trim();
+  const category = document.getElementById('blogCategory').value.trim();
+  const content = document.getElementById('blogContent').value.trim();
   const image_url = document.getElementById('blogImage').value.trim();
-  const content = tinymce.get('blogContent')?.getContent() || '';
 
-  const payload = { title, slug, image_url, content };
+  const payload = JSON.stringify({ title, content, category, image_url });
 
   const method = id ? 'PUT' : 'POST';
   const endpoint = id ? `${API_URL}/api/blogs/${id}` : `${API_URL}/api/blogs`;
 
   fetch(endpoint, {
     method,
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    },
-    body: JSON.stringify(payload)
+    headers,
+    body: payload
   })
     .then(r => r.json())
     .then(() => {
-      hideBlogForm();
       fetchBlogs();
+      hideBlogForm();
     });
 };
 
-function generateSlug() {
-  const title = document.getElementById('blogTitle').value.trim();
-  const slug = title
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
-  document.getElementById('blogSlug').value = slug;
-}
+window.editBlog = function (id) {
+  const blog = allBlogs.find(b => b.id === id);
+  if (!blog) return;
 
-function initTinyMCE() {
-  tinymce.init({
-    selector: '#blogContent',
-    height: 300,
-    menubar: false,
-    plugins: 'link image lists code',
-    toolbar: 'undo redo | bold italic underline | bullist numlist | link image | code'
-  });
-}
+  document.getElementById('blogId').value = blog.id;
+  document.getElementById('blogTitle').value = blog.title;
+  document.getElementById('blogCategory').value = blog.category || '';
+  document.getElementById('blogContent').value = blog.content;
+  document.getElementById('blogImage').value = blog.image_url || '';
+  document.getElementById('blogFormTitle').textContent = 'Edit Blog Post';
+  document.getElementById('blogForm').classList.remove('d-none');
+};
+
+window.deleteBlog = function (id) {
+  if (!confirm('Are you sure you want to delete this blog post?')) return;
+
+  fetch(`${API_URL}/api/blogs/${id}`, {
+    method: 'DELETE',
+    headers
+  })
+    .then(() => fetchBlogs());
+};

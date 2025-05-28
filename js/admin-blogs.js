@@ -4,13 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-const API_URL = 'https://ghanish-backend.onrender.com';
-const token = localStorage.getItem('token');
-const headers = {
-  'Authorization': `Bearer ${token}`,
-  'Content-Type': 'application/json'
-};
-
 let allBlogs = [];
 
 function fetchBlogs() {
@@ -50,23 +43,23 @@ function renderBlogList() {
     </table>`;
 }
 
-window.showBlogForm = function () {
+function showBlogForm() {
   document.getElementById('blogForm').reset();
   document.getElementById('blogId').value = '';
   document.getElementById('blogFormTitle').textContent = 'New Blog Post';
   document.getElementById('blogForm').classList.remove('d-none');
-};
+}
 
-window.hideBlogForm = function () {
+function hideBlogForm() {
   document.getElementById('blogForm').classList.add('d-none');
-};
+}
 
-window.saveBlog = function (e) {
+function saveBlog(e) {
   e.preventDefault();
 
   const id = document.getElementById('blogId').value;
   const title = document.getElementById('blogTitle').value.trim();
-  const category = document.getElementById('blogCategory').value.trim();
+  const category = document.getElementById('blogCategory')?.value.trim() || '';
   const content = document.getElementById('blogContent').value.trim();
   const image_url = document.getElementById('blogImage').value.trim();
 
@@ -85,9 +78,9 @@ window.saveBlog = function (e) {
       fetchBlogs();
       hideBlogForm();
     });
-};
+}
 
-window.editBlog = function (id) {
+function editBlog(id) {
   const blog = allBlogs.find(b => b.id === id);
   if (!blog) return;
 
@@ -98,9 +91,9 @@ window.editBlog = function (id) {
   document.getElementById('blogImage').value = blog.image_url || '';
   document.getElementById('blogFormTitle').textContent = 'Edit Blog Post';
   document.getElementById('blogForm').classList.remove('d-none');
-};
+}
 
-window.deleteBlog = function (id) {
+function deleteBlog(id) {
   if (!confirm('Are you sure you want to delete this blog post?')) return;
 
   fetch(`${API_URL}/api/blogs/${id}`, {
@@ -108,4 +101,11 @@ window.deleteBlog = function (id) {
     headers
   })
     .then(() => fetchBlogs());
-};
+}
+
+// ✅ Expose globally
+window.showBlogForm = showBlogForm;
+window.hideBlogForm = hideBlogForm;
+window.saveBlog = saveBlog;
+window.editBlog = editBlog;
+window.deleteBlog = deleteBlog;

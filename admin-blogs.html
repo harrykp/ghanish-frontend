@@ -29,32 +29,38 @@
       <form id="blogForm" class="border p-3 d-none" onsubmit="saveBlog(event)">
         <h6 class="mb-3" id="blogFormTitle">New Blog</h6>
         <input type="hidden" id="blogId" />
-
+      
         <div class="mb-2">
           <label for="blogTitle" class="form-label">Title</label>
           <input type="text" id="blogTitle" class="form-control" required />
         </div>
-
+      
         <div class="mb-2">
           <label for="blogSlug" class="form-label">Slug (auto-generated)</label>
           <input type="text" id="blogSlug" class="form-control" readonly />
         </div>
-
+      
+        <div class="mb-2">
+          <label for="blogCategory" class="form-label">Category</label>
+          <input type="text" id="blogCategory" class="form-control" placeholder="e.g. Recipes, Health, News" />
+        </div>
+      
         <div class="mb-2">
           <label for="blogImage" class="form-label">Image URL</label>
           <input type="url" id="blogImage" class="form-control" />
         </div>
-
+      
         <div class="mb-3">
           <label for="blogContent" class="form-label">Content</label>
           <textarea id="blogContent" class="form-control"></textarea>
         </div>
-
+      
         <div class="d-flex justify-content-between">
           <button type="submit" class="btn btn-success">Save Blog</button>
           <button type="button" class="btn btn-secondary" onclick="hideBlogForm()">Cancel</button>
         </div>
       </form>
+
     </div>
   </section>
 

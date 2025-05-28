@@ -31,12 +31,14 @@
   <script src="js/scripts.js"></script>
   <script>
     const API_URL = 'https://ghanish-backend.onrender.com';
-
+    
     let allBlogs = [];
-
+    
     async function fetchBlogs(category = '') {
       try {
-        const url = category ? `${API_URL}/api/blogs?category=${encodeURIComponent(category)}` : `${API_URL}/api/blogs`;
+        const url = category
+          ? `${API_URL}/api/public/blogs?category=${encodeURIComponent(category)}`
+          : `${API_URL}/api/public/blogs`;
         const res = await fetch(url);
         const blogs = await res.json();
         allBlogs = blogs;
@@ -47,6 +49,7 @@
         document.getElementById('blogGrid').innerHTML = '<p class="text-danger text-center">Failed to load blog posts.</p>';
       }
     }
+
 
     function populateCategories(blogs) {
       const select = document.getElementById('categoryFilter');

@@ -29,22 +29,21 @@
       const container = document.getElementById('blogContainer');
       const params = new URLSearchParams(location.search);
       const slug = params.get('slug');
-
+    
       if (!slug) {
         container.innerHTML = '<div class="alert alert-warning text-center">No blog specified.</div>';
         return;
       }
-
+    
       try {
-        const res = await fetch(`${API_URL}/api/blogs`);
-        const blogs = await res.json();
-        const blog = blogs.find(b => b.slug === slug);
-
-        if (!blog) {
+        const res = await fetch(`${API_URL}/api/public/blogs/slug/${slug}`);
+        if (!res.ok) {
           container.innerHTML = '<div class="alert alert-danger text-center">Blog post not found.</div>';
           return;
         }
-
+    
+        const blog = await res.json();
+    
         container.innerHTML = `
           <h2 class="text-center mb-3">${blog.title}</h2>
           ${blog.image_url ? `<img src="${blog.image_url}" class="img-fluid d-block mx-auto mb-4" alt="${blog.title}" />` : ''}
@@ -56,6 +55,7 @@
         container.innerHTML = '<div class="alert alert-danger text-center">Failed to load blog post.</div>';
       }
     });
+
   </script>
 </body>
 </html>

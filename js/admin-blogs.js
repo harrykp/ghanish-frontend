@@ -1,41 +1,53 @@
-// === Admin Blogs Page ===
-
-const blogForm = document.getElementById('blogForm');
-const blogList = document.getElementById('blogList');
-let editingBlogId = null;
+// === Admin Blog Management ===
 
 document.addEventListener('DOMContentLoaded', () => {
   if (location.pathname === '/admin-blogs.html') {
     fetchBlogs();
+    initTinyMCE();
+    document.getElementById('blogTitle').addEventListener('input', generateSlug);
   }
 });
+
+let currentBlogs = [];
 
 function fetchBlogs() {
   fetch(`${API_URL}/api/blogs`)
     .then(r => r.json())
-    .then(data => renderBlogList(data))
-    .catch(err => console.error('Failed to fetch blogs:', err));
+    .then(data => {
+      currentBlogs = data;
+      renderBlogList(data);
+    });
 }
 
 function renderBlogList(blogs) {
-  if (!blogList) return;
+  const list = document.getElementById('blogList');
+  if (!list) return;
   if (!blogs.length) {
-    blogList.innerHTML = '<p>No blog posts found.</p>';
+    list.innerHTML = `<p class="text-muted">No blogs yet.</p>`;
     return;
   }
 
-  blogList.innerHTML = `
-    <table class="table table-bordered">
-      <thead><tr><th>Title</th><th>Slug</th><th>Date</th><th>Actions</th></tr></thead>
+  list.innerHTML = `
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Title</th>
+          <th>Slug</th>
+          <th>Image</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
       <tbody>
-        ${blogs.map(blog => `
+        ${blogs.map(b => `
           <tr>
-            <td>${blog.title}</td>
-            <td>${blog.slug}</td>
-            <td>${new Date(blog.created_at).toLocaleString()}</td>
+            <td>${b.title}</td>
+            <td>${b.slug}</td>
+            <td>${b.image_url ? `<img src="${b.image_url}" alt="" style="height: 40px;">` : '—'}</td>
+            <td>${new Date(b.created_at).toLocaleDateString()}</td>
             <td>
-              <button class="btn btn-sm btn-warning me-2" onclick="editBlog(${blog.id})">Edit</button>
-              <button class="btn btn-sm btn-danger" onclick="deleteBlog(${blog.id})">Delete</button>
+              <button class="btn btn-sm btn-info me-2" onclick="editBlog(${b.id})">Edit</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteBlog(${b.id})">Delete</button>
             </td>
           </tr>
         `).join('')}
@@ -44,67 +56,84 @@ function renderBlogList(blogs) {
 }
 
 window.showBlogForm = function () {
-  blogForm.reset();
-  editingBlogId = null;
-  blogForm.classList.remove('d-none');
-  document.getElementById('blogFormTitle').textContent = 'New Blog Post';
+  document.getElementById('blogFormTitle').textContent = 'New Blog';
+  document.getElementById('blogForm').reset();
+  tinymce.get('blogContent')?.setContent('');
+  document.getElementById('blogId').value = '';
+  document.getElementById('blogForm').classList.remove('d-none');
 };
 
 window.hideBlogForm = function () {
-  blogForm.classList.add('d-none');
+  document.getElementById('blogForm').classList.add('d-none');
 };
 
-function populateForm(blog) {
+window.editBlog = function (id) {
+  const blog = currentBlogs.find(b => b.id === id);
+  if (!blog) return;
+
   document.getElementById('blogId').value = blog.id;
   document.getElementById('blogTitle').value = blog.title;
   document.getElementById('blogSlug').value = blog.slug;
   document.getElementById('blogImage').value = blog.image_url;
-  document.getElementById('blogContent').value = blog.content;
-  document.getElementById('blogFormTitle').textContent = 'Edit Blog Post';
-  blogForm.classList.remove('d-none');
-}
+  tinymce.get('blogContent')?.setContent(blog.content || '');
 
-window.editBlog = function (id) {
-  fetch(`${API_URL}/api/blogs/${id}`)
-    .then(r => r.json())
-    .then(blog => {
-      editingBlogId = id;
-      populateForm(blog);
-    });
-};
-
-window.saveBlog = function (e) {
-  e.preventDefault();
-  const title = document.getElementById('blogTitle').value.trim();
-  const slug = document.getElementById('blogSlug').value.trim();
-  const image_url = document.getElementById('blogImage').value.trim();
-  const content = document.getElementById('blogContent').value.trim();
-
-  const method = editingBlogId ? 'PUT' : 'POST';
-  const url = editingBlogId ? `${API_URL}/api/blogs/${editingBlogId}` : `${API_URL}/api/blogs`;
-
-  fetch(url, {
-    method,
-    headers,
-    body: JSON.stringify({ title, slug, content, image_url })
-  })
-    .then(r => r.json())
-    .then(() => {
-      hideBlogForm();
-      fetchBlogs();
-      showToast('Blog saved successfully', 'success');
-    });
+  document.getElementById('blogFormTitle').textContent = 'Edit Blog';
+  document.getElementById('blogForm').classList.remove('d-none');
 };
 
 window.deleteBlog = function (id) {
   if (!confirm('Delete this blog post?')) return;
   fetch(`${API_URL}/api/blogs/${id}`, {
     method: 'DELETE',
-    headers
+    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+  }).then(() => fetchBlogs());
+};
+
+window.saveBlog = function (e) {
+  e.preventDefault();
+
+  const id = document.getElementById('blogId').value;
+  const title = document.getElementById('blogTitle').value.trim();
+  const slug = document.getElementById('blogSlug').value.trim();
+  const image_url = document.getElementById('blogImage').value.trim();
+  const content = tinymce.get('blogContent')?.getContent() || '';
+
+  const payload = { title, slug, image_url, content };
+
+  const method = id ? 'PUT' : 'POST';
+  const endpoint = id ? `${API_URL}/api/blogs/${id}` : `${API_URL}/api/blogs`;
+
+  fetch(endpoint, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    },
+    body: JSON.stringify(payload)
   })
     .then(r => r.json())
     .then(() => {
+      hideBlogForm();
       fetchBlogs();
-      showToast('Blog deleted', 'danger');
     });
 };
+
+function generateSlug() {
+  const title = document.getElementById('blogTitle').value.trim();
+  const slug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+  document.getElementById('blogSlug').value = slug;
+}
+
+function initTinyMCE() {
+  tinymce.init({
+    selector: '#blogContent',
+    height: 300,
+    menubar: false,
+    plugins: 'link image lists code',
+    toolbar: 'undo redo | bold italic underline | bullist numlist | link image | code'
+  });
+}

@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   if (location.pathname === '/admin-blogs.html') {
+    initTinyMCE();
+    setupSlugAutogeneration();
     fetchBlogs();
   }
 });
@@ -43,10 +45,39 @@ function renderBlogList() {
     </table>`;
 }
 
+function initTinyMCE() {
+  if (tinymce.get('blogContent')) {
+    tinymce.get('blogContent').remove();
+  }
+
+  tinymce.init({
+    selector: '#blogContent',
+    height: 300,
+    menubar: false,
+    plugins: 'link image lists code',
+    toolbar: 'undo redo | bold italic underline | bullist numlist | link image | code'
+  });
+}
+
+function setupSlugAutogeneration() {
+  const titleInput = document.getElementById('blogTitle');
+  const slugInput = document.getElementById('blogSlug');
+
+  titleInput?.addEventListener('input', () => {
+    const slug = titleInput.value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    slugInput.value = slug;
+  });
+}
+
 function showBlogForm() {
   document.getElementById('blogForm').reset();
   document.getElementById('blogId').value = '';
   document.getElementById('blogFormTitle').textContent = 'New Blog Post';
+  tinymce.get('blogContent')?.setContent('');
   document.getElementById('blogForm').classList.remove('d-none');
 }
 
@@ -59,11 +90,12 @@ function saveBlog(e) {
 
   const id = document.getElementById('blogId').value;
   const title = document.getElementById('blogTitle').value.trim();
-  const category = document.getElementById('blogCategory')?.value.trim() || '';
-  const content = document.getElementById('blogContent').value.trim();
+  const slug = document.getElementById('blogSlug').value.trim();
+  const category = document.getElementById('blogCategory').value.trim();
+  const content = tinymce.get('blogContent')?.getContent().trim();
   const image_url = document.getElementById('blogImage').value.trim();
 
-  const payload = JSON.stringify({ title, content, category, image_url });
+  const payload = JSON.stringify({ title, slug, content, category, image_url });
 
   const method = id ? 'PUT' : 'POST';
   const endpoint = id ? `${API_URL}/api/blogs/${id}` : `${API_URL}/api/blogs`;
@@ -86,9 +118,10 @@ function editBlog(id) {
 
   document.getElementById('blogId').value = blog.id;
   document.getElementById('blogTitle').value = blog.title;
+  document.getElementById('blogSlug').value = blog.slug;
   document.getElementById('blogCategory').value = blog.category || '';
-  document.getElementById('blogContent').value = blog.content;
   document.getElementById('blogImage').value = blog.image_url || '';
+  tinymce.get('blogContent')?.setContent(blog.content || '');
   document.getElementById('blogFormTitle').textContent = 'Edit Blog Post';
   document.getElementById('blogForm').classList.remove('d-none');
 }
@@ -103,7 +136,7 @@ function deleteBlog(id) {
     .then(() => fetchBlogs());
 }
 
-// ✅ Expose globally
+// ✅ Expose functions globally
 window.showBlogForm = showBlogForm;
 window.hideBlogForm = hideBlogForm;
 window.saveBlog = saveBlog;

@@ -2,73 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin – Blogs | Ghanish</title>
   <link rel="icon" href="images/ghanish-logo.png" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="/css/styles.css" rel="stylesheet" />
+  <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 </head>
 <body>
-<script src="/js/helpers.js"></script>
-<script>requireAdmin();</script>
+  <script src="/js/helpers.js"></script>
+  <script>requireAdmin();</script>
 
-<!-- Admin Navigation -->
-<div id="nav-placeholder"></div>
+  <div id="nav-placeholder"></div>
 
-<section class="py-5">
-  <div class="container">
-    <h2 class="mb-4 text-center">Manage Blog Posts</h2>
+  <section class="py-5">
+    <div class="container">
+      <h2 class="mb-4 text-center">Manage Blog Posts</h2>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0">Blog List</h5>
-      <button class="btn btn-primary" onclick="showBlogForm()">+ New Blog</button>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Blog List</h5>
+        <button class="btn btn-primary" onclick="showBlogForm()">+ New Blog</button>
+      </div>
+
+      <div id="blogList" class="mb-4"></div>
+
+      <form id="blogForm" class="border p-3 d-none" onsubmit="saveBlog(event)">
+        <h6 class="mb-3" id="blogFormTitle">New Blog</h6>
+        <input type="hidden" id="blogId" />
+
+        <div class="mb-2">
+          <label for="blogTitle" class="form-label">Title</label>
+          <input type="text" id="blogTitle" class="form-control" required />
+        </div>
+
+        <div class="mb-2">
+          <label for="blogSlug" class="form-label">Slug (auto-generated)</label>
+          <input type="text" id="blogSlug" class="form-control" readonly />
+        </div>
+
+        <div class="mb-2">
+          <label for="blogImage" class="form-label">Image URL</label>
+          <input type="url" id="blogImage" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+          <label for="blogContent" class="form-label">Content</label>
+          <textarea id="blogContent" class="form-control"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between">
+          <button type="submit" class="btn btn-success">Save Blog</button>
+          <button type="button" class="btn btn-secondary" onclick="hideBlogForm()">Cancel</button>
+        </div>
+      </form>
     </div>
+  </section>
 
-    <div id="blogList" class="mb-4"></div>
+  <div id="footer-placeholder"></div>
 
-    <!-- Blog Form -->
-    <form id="blogForm" class="border p-3 d-none" onsubmit="saveBlog(event)">
-      <h6 class="mb-3" id="blogFormTitle">New Blog Post</h6>
-      <input type="hidden" id="blogId" />
-
-      <div class="mb-2">
-        <label for="blogTitle" class="form-label">Title</label>
-        <input type="text" id="blogTitle" class="form-control" required />
-      </div>
-
-      <div class="mb-2">
-        <label for="blogSlug" class="form-label">Slug (auto-generated)</label>
-        <input type="text" id="blogSlug" class="form-control" readonly />
-      </div>
-
-      <div class="mb-2">
-        <label for="blogSlug" class="form-label">Slug</label>
-        <input type="text" id="blogSlug" class="form-control" required />
-      </div>
-
-      <div class="mb-2">
-        <label for="blogImage" class="form-label">Image URL</label>
-        <input type="url" id="blogImage" class="form-control" />
-      </div>
-
-      <div class="mb-3">
-        <label for="blogContent" class="form-label">Content</label>
-        <textarea id="blogContent" class="form-control" rows="6"></textarea>
-      </div>
-
-      <div class="d-flex justify-content-between">
-        <button type="submit" class="btn btn-success">Save Blog</button>
-        <button type="button" class="btn btn-secondary" onclick="hideBlogForm()">Cancel</button>
-      </div>
-    </form>
-  </div>
-</section>
-
-<div id="footer-placeholder"></div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/js/includes.js"></script>
-<script src="/js/admin-base.js"></script>
-<script src="/js/admin-blogs.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/includes.js"></script>
+  <script src="/js/admin-base.js"></script>
+  <script src="/js/admin-blogs.js"></script>
 </body>
 </html>
